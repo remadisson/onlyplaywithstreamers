@@ -1,0 +1,7 @@
+name: OnlyPlayWithStreamers
+version: ${project.version}
+main: de.remadisson.opws
+api-version: 1.16
+authors: [ remadisson ]
+description: This Plugin disallows 'normal' Players to grief or to do other stupid stuff. They get kicked when a Streamer lefts.
+website: https://www.remadyreturns.de/
