@@ -1,0 +1,10 @@
+name: OnlyPlayWithStreamers
+author: remadisson
+version: 1.0.0
+website: https://www.remadyreturns.de/
+
+main: de.remadisson.opws.main
+
+commands:
+  streamer:
+    description: Allows to add Streamers to the List, so they can join.
