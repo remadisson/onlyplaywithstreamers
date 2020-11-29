@@ -7,12 +7,16 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
-public class StreamerCommand implements CommandExecutor {
+public class StreamerCommand implements CommandExecutor, TabCompleter {
 
     private final String console = files.console;
     private final String prefix = files.prefix;
@@ -153,4 +157,40 @@ public class StreamerCommand implements CommandExecutor {
         }
     }
 
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        ArrayList<String> flist = new ArrayList<>();
+        ArrayList<String> indexList = new ArrayList<>(Arrays.asList("add", "remove", "list"));
+
+        if(args.length == 1){
+            if(sender.hasPermission("opws.streamer")) {
+                for(String s : indexList){
+                    if(s.startsWith(args[0].toLowerCase())){
+                        flist.add(s);
+                    }
+                }
+            } else if(sender.hasPermission("opws.streamer.sync")){
+                if("sync".startsWith(args[0].toLowerCase())){
+                    flist.add("sync");
+                }
+            }
+        }
+
+        if(args.length == 2){
+            if(sender.hasPermission("opws.streamer")) {
+                if (args[0].toLowerCase().equals("add") || args[0].toLowerCase().equals("remove")) {
+                    for (String name : Bukkit.getOnlinePlayers().stream().map(Player::getName).collect(Collectors.toList())) {
+                        if (name.toLowerCase().startsWith(args[1].toLowerCase())) flist.add(name);
+                    }
+                } else if (args[0].toLowerCase().equals("list")) {
+                    int maxsites = (int) Math.ceil(streamerManager.getStreamer().size() / 6);
+                    for(int i = 1; i <= maxsites; i++){
+                        flist.add(String.valueOf(i));
+                    }
+                }
+            }
+        }
+
+        return flist;
+    }
 }

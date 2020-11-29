@@ -59,6 +59,7 @@ public final class main extends JavaPlugin {
      */
     public void registerCommands(){
         Bukkit.getPluginCommand("streamer").setExecutor(new StreamerCommand());
+        Bukkit.getPluginCommand("streamer").setTabCompleter(new StreamerCommand());
     }
 
 
