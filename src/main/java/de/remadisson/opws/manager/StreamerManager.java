@@ -1,9 +1,11 @@
 package de.remadisson.opws.manager;
 
 import de.remadisson.opws.api.FileAPI;
-import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 
 import java.util.ArrayList;
+import java.util.Set;
 import java.util.UUID;
 
 public class StreamerManager {
@@ -11,6 +13,7 @@ public class StreamerManager {
     private FileAPI api;
     private ArrayList<UUID> allowed = new ArrayList<>();
     private ArrayList<UUID> streamer = new ArrayList<>();
+    private Set<OfflinePlayer> whitelist = Bukkit.getWhitelistedPlayers();
 
     public StreamerManager(FileAPI fileapi){
         api = fileapi;

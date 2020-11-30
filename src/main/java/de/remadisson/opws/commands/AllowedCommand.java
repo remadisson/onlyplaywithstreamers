@@ -133,8 +133,8 @@ public class AllowedCommand implements CommandExecutor, TabCompleter {
 
         int maxsites = (int) Math.ceil(allowed.size() / 6);
 
-        if (site-1 > maxsites) {
-            site = maxsites+1;
+        if (site - 1 > maxsites) {
+            site = maxsites + 1;
         }
 
         if (allowed.isEmpty()) {
@@ -146,11 +146,11 @@ public class AllowedCommand implements CommandExecutor, TabCompleter {
             site = site - 1;
         }
 
-        sender.sendMessage(prefix + "§bAllowed §6Page §8[§b" + (site+1) + "§7/§e" + (maxsites+1) + "§8]");
+        sender.sendMessage(prefix + "§bAllowed §6Page §8[§b" + (site + 1) + "§7/§e" + (maxsites + 1) + "§8]");
 
-        for (int i = 0; i < (Math.min(allowed.size() - (5*site), 5)); i++) {
+        for (int i = 0; i < (Math.min(allowed.size() - (5 * site), 5)); i++) {
             Player player = Bukkit.getPlayer(allowed.get((site * 5) + i));
-            sender.sendMessage(prefix + "§f - " + (player != null ? "§a" + player.getName() : "§c" + MojangAPI.getPlayerProfile(allowed.get((site * 5) + i)).getName()));
+            sender.sendMessage(prefix + "§f - " + (player != null ? "§a" + player.getName() : "§c" + MojangAPI.getPlayerProfile(allowed.get((site * 5) + i)).getName()) + " §7- §fWhitelist: §b" + Bukkit.getWhitelistedPlayers().contains(Bukkit.getOfflinePlayer(MojangAPI.getPlayerProfile(allowed.get((site * 5) + i)).getUUID())));
         }
 
         if (site != maxsites) {

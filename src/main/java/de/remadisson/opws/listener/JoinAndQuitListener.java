@@ -60,38 +60,5 @@ public class JoinAndQuitListener implements Listener {
             e.setQuitMessage(prefix + "§c- §5" + e.getPlayer().getName());
         }
 
-
-        Bukkit.getScheduler().scheduleSyncDelayedTask(main.getInstance(), () -> {
-
-        boolean stayOnline = false;
-        for(Player online : Bukkit.getOnlinePlayers()){
-            if(streamer.contains(online.getUniqueId())){
-                stayOnline = true;
-            }
-        }
-
-        if(!stayOnline){
-            Bukkit.broadcastMessage(prefix + "§cDer Server wird in wenigen Minuten geschlossen, sofern kein Streamer mehr joint!");
-            Bukkit.getScheduler().scheduleSyncDelayedTask(main.getInstance(), () -> {
-                boolean streamerOnline = false;
-                for(Player online : Bukkit.getOnlinePlayers()){
-                    if(streamer.contains(online.getUniqueId())){
-                        streamerOnline = true;
-                    }
-                }
-                if(!streamerOnline){
-                    Bukkit.broadcastMessage(prefix + "§7Es ist nun kein Streamer mehr online, so werden alle Spieler ohne direkte berichtigung gekickt!");
-                    for(Player online : Bukkit.getOnlinePlayers()){
-                        if(!allowed.contains(online.getUniqueId()) && !e.getPlayer().isOp()){
-                            online.kickPlayer("§4Du wurdest gekickt!\n§cEs befindet sich derzeit kein Streamer auf dem Server!\n§bBitte komm später vorbei um dem Server beizutreten!");
-
-                        }
-                    }
-
-                    files.state = ServerState.CLOSED;
-                }
-            }, 20 * 60 * 5);
-        }
-        }, 20*4);
     }
 }
