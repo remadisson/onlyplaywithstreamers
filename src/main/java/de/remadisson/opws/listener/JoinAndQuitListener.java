@@ -49,6 +49,10 @@ public class JoinAndQuitListener implements Listener {
                 files.state = ServerState.OPEN;
             }
         }
+
+        updateHeaderAndFooter(e.getPlayer());
+
+
     }
 
     @EventHandler
@@ -60,5 +64,12 @@ public class JoinAndQuitListener implements Listener {
             e.setQuitMessage(prefix + "§c- §5" + e.getPlayer().getName());
         }
 
+        updateHeaderAndFooter(e.getPlayer());
+
+    }
+
+    public static void updateHeaderAndFooter(Player p){
+        p.setPlayerListHeader("§6§lCommunity-Server\n§cMaikEagle\n§7Online: §e" + Bukkit.getOnlinePlayers().size() + "§8/§750\n ");
+        p.setPlayerListFooter(" \n§7Server-Addresse:\n§e000.000.000.00\n§5Twitch§7: §5MaikEagle");
     }
 }

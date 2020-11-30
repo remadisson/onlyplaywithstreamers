@@ -25,10 +25,10 @@ public class StreamerCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!(sender instanceof Player)) {
+       /* if (!(sender instanceof Player)) {
             sender.sendMessage(console + "You are currently not capable of running this command!");
             return false;
-        }
+        }*/
 
         if (!sender.hasPermission("opws.streamer")) {
             sender.sendMessage(prefix + "§cYou do not have permission to execute this command!");

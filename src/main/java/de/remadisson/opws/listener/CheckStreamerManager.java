@@ -14,32 +14,41 @@ public class CheckStreamerManager {
 
     private final static StreamerManager streamerManager = files.streamerManager;
     private final static String prefix = files.prefix;
+    private final static String console = files.console;
 
     private static int minutes = 6;
     private static int temp_minutes = minutes;
 
-    private static int cycle_seconds = 0;
+    private static int cycle_seconds = -2;
+    private static int cycle_times = 0;
 
     public static void doCycle() {
         files.pool.execute(() -> {
-
-            CheckStreamerCycle();
 
             Bukkit.getScheduler().scheduleSyncRepeatingTask(main.getInstance(), () -> {
 
                 cycle_seconds++;
 
-                if (cycle_seconds == 10) {
-                    cycle_seconds = 0;
-                    CheckStreamerCycle();
+                if(cycle_seconds == -1){
+                    CheckStreamerCycle(cycle_times);
                 }
 
+                if (cycle_seconds == 10) {
+                    cycle_times++;
+                    cycle_seconds = 0;
+                    CheckStreamerCycle(cycle_times);
+
+                }
+
+                if(cycle_times == 6){
+                    cycle_times = 0;
+                }
 
             }, 20, 20);
         });
     }
 
-    public static void CheckStreamerCycle() {
+    public static void CheckStreamerCycle(int seconds) {
 
         boolean stayOnline = false;
 
@@ -53,24 +62,29 @@ public class CheckStreamerManager {
             temp_minutes = minutes;
 
             if (files.state == ServerState.CLOSED) {
+                //Bukkit.getServer().getConsoleSender().sendMessage(console + "§eDer Server ist nun geöffnet.");
+                Bukkit.broadcastMessage(console + "§eDer Server ist nun geöffnet.");
                 files.state = ServerState.OPEN;
-                Bukkit.broadcastMessage(prefix + "§eDer Server ist nun geöffnet.");
             }
 
         } else {
             if (Bukkit.getOnlinePlayers().size() > 0 && files.state == ServerState.OPEN) {
-                temp_minutes = temp_minutes - 1;
-                Bukkit.broadcastMessage(prefix + "§eNoch §6" + temp_minutes + " Minuten§e, bis der Server schließt!");
+                if(seconds == 6) {
+                    temp_minutes = temp_minutes - 1;
+                    //Bukkit.getServer().getConsoleSender().sendMessage(console + "§eNoch §6" + temp_minutes + " Minuten§e, bis der Server schließt!");
+                    Bukkit.broadcastMessage(console + "§eNoch §6" + temp_minutes + " Minuten§e, bis der Server schließt!");
+                }
             }
         }
 
         if (temp_minutes == 0) {
             ArrayList<UUID> allowed = streamerManager.getAllowed();
 
-            Bukkit.broadcastMessage(prefix + "§7Es ist nun kein Streamer mehr online, so werden alle Spieler ohne direkte berichtigung gekickt!");
+            //Bukkit.getServer().getConsoleSender().sendMessage(console + "§7Es ist nun kein Streamer mehr online, so werden alle Spieler ohne direkte berichtigung gekickt!");
+            Bukkit.broadcastMessage((console + "§7Es ist nun kein Streamer mehr online, so werden alle Spieler ohne direkte berichtigung gekickt!"));
 
             for (Player online : Bukkit.getOnlinePlayers()) {
-                if (!allowed.contains(online.getUniqueId()) && !online.getPlayer().isOp()) {
+                if (!allowed.contains(online.getUniqueId()) && !online.getPlayer().isOp() &&!streamerManager.getStreamer().contains(online.getUniqueId())) {
                     online.kickPlayer("§4Du wurdest gekickt!\n§cEs befindet sich derzeit kein Streamer auf dem Server!\n§bBitte komm später vorbei um dem Server beizutreten!");
 
                 }
