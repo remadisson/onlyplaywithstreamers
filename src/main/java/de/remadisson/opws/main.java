@@ -1,6 +1,7 @@
 package de.remadisson.opws;
 
 import de.remadisson.opws.api.FileAPI;
+import de.remadisson.opws.commands.AllowedCommand;
 import de.remadisson.opws.commands.StreamerCommand;
 import de.remadisson.opws.listener.JoinAndQuitListener;
 import de.remadisson.opws.manager.StreamerManager;
@@ -60,6 +61,8 @@ public final class main extends JavaPlugin {
     public void registerCommands(){
         Bukkit.getPluginCommand("streamer").setExecutor(new StreamerCommand());
         Bukkit.getPluginCommand("streamer").setTabCompleter(new StreamerCommand());
+        Bukkit.getPluginCommand("allowed").setExecutor(new AllowedCommand());
+        Bukkit.getPluginCommand("allowed").setTabCompleter(new AllowedCommand());
     }
 
 
