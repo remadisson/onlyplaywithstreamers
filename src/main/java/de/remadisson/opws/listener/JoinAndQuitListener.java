@@ -41,7 +41,7 @@ public class JoinAndQuitListener implements Listener {
         if((allowed.contains(e.getPlayer().getUniqueId()) || e.getPlayer().isOp()) && !streamer.contains(e.getPlayer().getUniqueId())){
             e.setJoinMessage(null);
         } else {
-            e.setJoinMessage(prefix + "§a+ §b" + e.getPlayer().getName());
+            e.setJoinMessage(prefix + "§a+ §5" + e.getPlayer().getName());
         }
 
         if(streamer.contains(e.getPlayer().getUniqueId())){
@@ -53,6 +53,16 @@ public class JoinAndQuitListener implements Listener {
 
     @EventHandler
     public void onQuit(PlayerQuitEvent e){
+
+        if((allowed.contains(e.getPlayer().getUniqueId()) || e.getPlayer().isOp()) && !streamer.contains(e.getPlayer().getUniqueId())){
+            e.setQuitMessage(null);
+        } else {
+            e.setQuitMessage(prefix + "§c- §5" + e.getPlayer().getName());
+        }
+
+
+        Bukkit.getScheduler().scheduleSyncDelayedTask(main.getInstance(), () -> {
+
         boolean stayOnline = false;
         for(Player online : Bukkit.getOnlinePlayers()){
             if(streamer.contains(online.getUniqueId())){
@@ -70,6 +80,7 @@ public class JoinAndQuitListener implements Listener {
                     }
                 }
                 if(!streamerOnline){
+                    Bukkit.broadcastMessage(prefix + "§7Es ist nun kein Streamer mehr online, so werden alle Spieler ohne direkte berichtigung gekickt!");
                     for(Player online : Bukkit.getOnlinePlayers()){
                         if(!allowed.contains(online.getUniqueId()) && !e.getPlayer().isOp()){
                             online.kickPlayer("§4Du wurdest gekickt!\n§cEs befindet sich derzeit kein Streamer auf dem Server!\n§bBitte komm später vorbei um dem Server beizutreten!");
@@ -79,7 +90,8 @@ public class JoinAndQuitListener implements Listener {
 
                     files.state = ServerState.CLOSED;
                 }
-            }, 20 * 60 * 3);
+            }, 20 * 60 * 5);
         }
+        }, 20*4);
     }
 }
