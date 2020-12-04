@@ -2,7 +2,7 @@ package de.remadisson.opws.listener;
 
 import de.remadisson.opws.enums.ServerState;
 import de.remadisson.opws.files;
-import de.remadisson.opws.main;
+import de.remadisson.opws.manager.TablistManager;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -52,7 +52,7 @@ public class JoinAndQuitListener implements Listener {
 
         updateHeaderAndFooter(e.getPlayer());
 
-
+        TablistManager.getInstance().registerTeam(e.getPlayer(), files.getPrefix(e.getPlayer().getUniqueId()), files.getColor(e.getPlayer().getUniqueId()), "", files.getLevel(e.getPlayer().getUniqueId()));
     }
 
     @EventHandler
@@ -69,7 +69,8 @@ public class JoinAndQuitListener implements Listener {
     }
 
     public static void updateHeaderAndFooter(Player p){
-        p.setPlayerListHeader("§6§lCommunity-Server\n§cMaikEagle\n§7Online: §e" + Bukkit.getOnlinePlayers().size() + "§8/§750\n ");
-        p.setPlayerListFooter(" \n§7Server-Addresse:\n§e000.000.000.00\n§5Twitch§7: §5MaikEagle");
+        p.setPlayerListHeader("§6§lCommunity-Server\n§c§lMaikEagle\n§7Online: §e" + Bukkit.getOnlinePlayers().size() + "§8/§750\n ");
+        p.setPlayerListFooter(" \n§7Server-Addresse:\n§e000.000.000.00\n§5Twitch§7: §5MaikEaglee");
     }
+
 }
