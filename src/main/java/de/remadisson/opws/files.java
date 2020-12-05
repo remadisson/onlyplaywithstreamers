@@ -71,9 +71,9 @@ public class files {
         if(player.isOp()){
             return 0;
         } else if(streamerManager.getStreamer().contains(uuid)){
-            return 10;
-        } else if(streamerManager.getAllowed().contains(uuid)){
             return 20;
+        } else if(streamerManager.getAllowed().contains(uuid)){
+            return 10;
         } else {
             return 30;
         }

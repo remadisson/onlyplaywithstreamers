@@ -72,7 +72,9 @@ public class CheckStreamerManager {
                 if(seconds == 6) {
                     temp_minutes = temp_minutes - 1;
                     //Bukkit.getServer().getConsoleSender().sendMessage(console + "§eNoch §6" + temp_minutes + " Minuten§e, bis der Server schließt!");
-                    Bukkit.broadcastMessage(console + "§eNoch §6" + temp_minutes + " Minuten§e, bis der Server schließt!");
+                    if(temp_minutes > 0) {
+                        Bukkit.broadcastMessage(console + "§eNoch §6" + temp_minutes + " Minuten§e, bis der Server schließt!");
+                    }
                 }
             }
         }
@@ -81,6 +83,7 @@ public class CheckStreamerManager {
             ArrayList<UUID> allowed = streamerManager.getAllowed();
 
             //Bukkit.getServer().getConsoleSender().sendMessage(console + "§7Es ist nun kein Streamer mehr online, so werden alle Spieler ohne direkte berichtigung gekickt!");
+            Bukkit.broadcastMessage(console + "§eDer Server ist nun §cgeschlossen!");
             Bukkit.broadcastMessage((console + "§7Es ist nun kein Streamer mehr online, so werden alle Spieler ohne direkte berichtigung gekickt!"));
 
             for (Player online : Bukkit.getOnlinePlayers()) {

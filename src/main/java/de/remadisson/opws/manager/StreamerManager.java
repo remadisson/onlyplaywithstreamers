@@ -1,6 +1,7 @@
 package de.remadisson.opws.manager;
 
 import de.remadisson.opws.api.FileAPI;
+import de.remadisson.opws.events.PlayerChangePermissionEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 
@@ -21,11 +22,13 @@ public class StreamerManager {
 
     public StreamerManager addStreamer(UUID uuid){
         streamer.add(uuid);
+        Bukkit.getPluginManager().callEvent(new PlayerChangePermissionEvent());
         return this;
     }
 
     public StreamerManager removeStreamer(UUID uuid){
         streamer.remove(uuid);
+        Bukkit.getPluginManager().callEvent(new PlayerChangePermissionEvent());
         return this;
     }
 
@@ -35,11 +38,13 @@ public class StreamerManager {
 
     public StreamerManager addAllowed(UUID uuid){
         allowed.add(uuid);
+        Bukkit.getPluginManager().callEvent(new PlayerChangePermissionEvent());
         return this;
     }
 
     public StreamerManager removeAllowed(UUID uuid){
         allowed.remove(uuid);
+        Bukkit.getPluginManager().callEvent(new PlayerChangePermissionEvent());
         return this;
     }
 

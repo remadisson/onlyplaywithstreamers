@@ -69,8 +69,8 @@ public class JoinAndQuitListener implements Listener {
     }
 
     public static void updateHeaderAndFooter(Player p){
-        p.setPlayerListHeader("§6§lCommunity-Server\n§c§lMaikEagle\n§7Online: §e" + Bukkit.getOnlinePlayers().size() + "§8/§750\n ");
-        p.setPlayerListFooter(" \n§7Server-Addresse:\n§e000.000.000.00\n§5Twitch§7: §5MaikEaglee");
+        p.setPlayerListHeader("§6§lCommunity-Server\n§c§lMaikEagle\n§7Online: §e" + Bukkit.getOnlinePlayers().size() + "§8/§7" + Bukkit.getServer().getMaxPlayers() + "\n ");
+        p.setPlayerListFooter(" \n§7Server-Addresse:\n§e"+Bukkit.getServer().getPort()+ "\n§5Twitch§7: §5MaikEaglee");
     }
 
 }
