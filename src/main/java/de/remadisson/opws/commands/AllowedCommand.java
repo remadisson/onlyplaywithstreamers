@@ -81,7 +81,7 @@ public class AllowedCommand implements CommandExecutor, TabCompleter {
                         return false;
                     }
 
-                    allowed.add(uuid);
+                    streamerManager.addAllowed(uuid);
                     sender.sendMessage(prefix + "§aThe Player §2" + secondArgument + "§a is now §bAllowed!");
                     return false;
                 }
@@ -95,7 +95,7 @@ public class AllowedCommand implements CommandExecutor, TabCompleter {
                         return false;
                     }
 
-                    allowed.remove(uuid);
+                    streamerManager.removeAllowed(uuid);
                     sender.sendMessage(prefix + "§aThe Player §2" + secondArgument + "§a is §cnot §bAllowed §aanymore!");
                     return false;
                 }

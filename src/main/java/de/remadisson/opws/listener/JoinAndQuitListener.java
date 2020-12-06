@@ -52,7 +52,7 @@ public class JoinAndQuitListener implements Listener {
 
         updateHeaderAndFooter(e.getPlayer());
 
-        TablistManager.getInstance().registerTeam(e.getPlayer(), files.getPrefix(e.getPlayer().getUniqueId()), files.getColor(e.getPlayer().getUniqueId()), "", files.getLevel(e.getPlayer().getUniqueId()));
+        TablistManager.getInstance().updateTeam(e.getPlayer(), files.getPrefix(e.getPlayer().getUniqueId()), files.getColor(e.getPlayer().getUniqueId()), "", files.getLevel(e.getPlayer().getUniqueId()));
     }
 
     @EventHandler

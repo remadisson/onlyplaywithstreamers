@@ -84,7 +84,7 @@ public class StreamerCommand implements CommandExecutor, TabCompleter {
                         return false;
                     }
 
-                    streamer.add(uuid);
+                    streamerManager.addStreamer(uuid);
                     sender.sendMessage(prefix + "§aThe Player §2" + secondArgument + "§a is now a §5Streamer!");
                     return false;
                 }
@@ -98,7 +98,7 @@ public class StreamerCommand implements CommandExecutor, TabCompleter {
                         return false;
                     }
 
-                    streamer.remove(uuid);
+                    streamerManager.removeStreamer(uuid);
                     sender.sendMessage(prefix + "§aThe Player §2" + secondArgument + "§a is §cno §5Streamer §aanymore!");
                     return false;
                 }

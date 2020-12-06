@@ -3,10 +3,13 @@ package de.remadisson.opws;
 import de.remadisson.opws.commands.AllowedCommand;
 import de.remadisson.opws.commands.StreamerCommand;
 import de.remadisson.opws.listener.*;
+import de.remadisson.opws.manager.TablistManager;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.util.UUID;
 
 public final class main extends JavaPlugin {
 
@@ -39,7 +42,9 @@ public final class main extends JavaPlugin {
         CheckStreamerManager.doCycle();
 
         for(Player online : Bukkit.getOnlinePlayers()){
+            UUID uuid = online.getUniqueId();
             JoinAndQuitListener.updateHeaderAndFooter(online);
+            TablistManager.getInstance().updateTeam(online, files.getPrefix(uuid), files.getColor(uuid), "", files.getLevel(uuid));
         }
     }
 

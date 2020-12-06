@@ -20,7 +20,7 @@ public class TablistManager {
         teams = new HashMap<>();
     }
 
-    public void registerTeam(Player p, String prefix, EnumChatFormat color, String suffix, int level){
+    public void updateTeam(Player p, String prefix, EnumChatFormat color, String suffix, int level){
         String s = level + p.getUniqueId().toString().substring(1, 6);
 
         if(scoreboard.getTeam(s) != null){
