@@ -10,3 +10,5 @@ commands:
     description: Allows to add Streamers to the List, so they can join.
   allowed:
     description: Allows to add other Allowed Players, so they can join idependently.
+  whitelist:
+    description: Replaces the default Whitelist-Command.

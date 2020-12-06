@@ -8,6 +8,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
+import java.util.HashMap;
 import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -24,6 +25,8 @@ public class files {
 
     public static FileAPI fileAPI = new FileAPI("streamer.yml", "./plugins/OnlyPlayWithStreamers");
     public static StreamerManager streamerManager = new StreamerManager(fileAPI);
+
+    public static final HashMap<UUID, String> namecache = new HashMap<>();
 
     public static void loadStreamer(){
         streamerManager.load();

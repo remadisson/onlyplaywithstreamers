@@ -32,7 +32,6 @@ public class JoinAndQuitListener implements Listener {
 
         } else if(files.state == ServerState.OPEN){
             e.allow();
-
         }
     }
 
@@ -53,6 +52,10 @@ public class JoinAndQuitListener implements Listener {
         updateHeaderAndFooter(e.getPlayer());
 
         TablistManager.getInstance().updateTeam(e.getPlayer(), files.getPrefix(e.getPlayer().getUniqueId()), files.getColor(e.getPlayer().getUniqueId()), "", files.getLevel(e.getPlayer().getUniqueId()));
+
+        if(files.namecache.containsKey(e.getPlayer().getUniqueId())){
+            files.namecache.remove(e.getPlayer().getUniqueId());
+        }
     }
 
     @EventHandler
@@ -65,6 +68,10 @@ public class JoinAndQuitListener implements Listener {
         }
 
         updateHeaderAndFooter(e.getPlayer());
+
+        if(!files.namecache.containsKey(e.getPlayer().getUniqueId())){
+            files.namecache.put(e.getPlayer().getUniqueId(), e.getPlayer().getName());
+        }
 
     }
 

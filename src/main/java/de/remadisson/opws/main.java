@@ -2,6 +2,7 @@ package de.remadisson.opws;
 
 import de.remadisson.opws.commands.AllowedCommand;
 import de.remadisson.opws.commands.StreamerCommand;
+import de.remadisson.opws.commands.WhitelistCommand;
 import de.remadisson.opws.listener.*;
 import de.remadisson.opws.manager.TablistManager;
 import org.bukkit.Bukkit;
@@ -46,6 +47,8 @@ public final class main extends JavaPlugin {
             JoinAndQuitListener.updateHeaderAndFooter(online);
             TablistManager.getInstance().updateTeam(online, files.getPrefix(uuid), files.getColor(uuid), "", files.getLevel(uuid));
         }
+
+        files.streamerManager.syncWhitelist();
     }
 
 
@@ -72,6 +75,9 @@ public final class main extends JavaPlugin {
         Bukkit.getPluginCommand("streamer").setTabCompleter(new StreamerCommand());
         Bukkit.getPluginCommand("allowed").setExecutor(new AllowedCommand());
         Bukkit.getPluginCommand("allowed").setTabCompleter(new AllowedCommand());
+        Bukkit.getPluginCommand("whitelist").unregister(null);
+        Bukkit.getPluginCommand("whitelist").setExecutor(new WhitelistCommand());
+        Bukkit.getPluginCommand("whitelist").setTabCompleter(new WhitelistCommand());
     }
 
 
@@ -85,6 +91,7 @@ public final class main extends JavaPlugin {
         pm.registerEvents(new PingEvent(), this);
         pm.registerEvents(new UpdateEvents(), this);
         pm.registerEvents(new ChatListener(), this);
+
     }
 
 

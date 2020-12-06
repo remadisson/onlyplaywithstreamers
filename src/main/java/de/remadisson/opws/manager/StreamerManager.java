@@ -3,15 +3,19 @@ package de.remadisson.opws.manager;
 import de.remadisson.opws.api.FileAPI;
 import de.remadisson.opws.events.PlayerChangePermissionEvent;
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 
 import java.util.ArrayList;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class StreamerManager {
 
     private FileAPI api;
     private ArrayList<UUID> allowed = new ArrayList<>();
     private ArrayList<UUID> streamer = new ArrayList<>();
+    private Set<OfflinePlayer> whitelist = Bukkit.getWhitelistedPlayers();
 
     public StreamerManager(FileAPI fileapi){
         api = fileapi;
@@ -19,12 +23,18 @@ public class StreamerManager {
 
     public StreamerManager addStreamer(UUID uuid){
         streamer.add(uuid);
+        if(!whitelist.contains(Bukkit.getOfflinePlayer(uuid))) {
+            Bukkit.getOfflinePlayer(uuid).setWhitelisted(true);
+        }
         Bukkit.getPluginManager().callEvent(new PlayerChangePermissionEvent());
         return this;
     }
 
     public StreamerManager removeStreamer(UUID uuid){
         streamer.remove(uuid);
+        if(whitelist.contains(Bukkit.getOfflinePlayer(uuid))) {
+            Bukkit.getOfflinePlayer(uuid).setWhitelisted(false);
+        }
         Bukkit.getPluginManager().callEvent(new PlayerChangePermissionEvent());
         return this;
     }
@@ -35,12 +45,18 @@ public class StreamerManager {
 
     public StreamerManager addAllowed(UUID uuid){
         allowed.add(uuid);
+        if(!whitelist.contains(Bukkit.getOfflinePlayer(uuid))) {
+            Bukkit.getOfflinePlayer(uuid).setWhitelisted(true);
+        }
         Bukkit.getPluginManager().callEvent(new PlayerChangePermissionEvent());
         return this;
     }
 
     public StreamerManager removeAllowed(UUID uuid){
         allowed.remove(uuid);
+        if(whitelist.contains(Bukkit.getOfflinePlayer(uuid))) {
+            Bukkit.getOfflinePlayer(uuid).setWhitelisted(false);
+        }
         Bukkit.getPluginManager().callEvent(new PlayerChangePermissionEvent());
         return this;
     }
@@ -98,5 +114,20 @@ public class StreamerManager {
             }
         }
      return arrayList;
+    }
+
+    public StreamerManager syncWhitelist(){
+        for(OfflinePlayer streamer : getStreamer().stream().map(Bukkit::getOfflinePlayer).collect(Collectors.toList())){
+            if(!whitelist.contains(streamer)){
+                streamer.setWhitelisted(true);
+            }
+        }
+
+        for(OfflinePlayer allowed : getAllowed().stream().map(Bukkit::getOfflinePlayer).collect(Collectors.toList())){
+            if(!whitelist.contains(allowed)){
+                allowed.setWhitelisted(true);
+            }
+        }
+        return this;
     }
 }
