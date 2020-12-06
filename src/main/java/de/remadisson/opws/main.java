@@ -2,10 +2,7 @@ package de.remadisson.opws;
 
 import de.remadisson.opws.commands.AllowedCommand;
 import de.remadisson.opws.commands.StreamerCommand;
-import de.remadisson.opws.listener.CheckStreamerManager;
-import de.remadisson.opws.listener.JoinAndQuitListener;
-import de.remadisson.opws.listener.PingEvent;
-import de.remadisson.opws.listener.UpdateEvents;
+import de.remadisson.opws.listener.*;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
@@ -82,6 +79,7 @@ public final class main extends JavaPlugin {
         pm.registerEvents(new JoinAndQuitListener(), this);
         pm.registerEvents(new PingEvent(), this);
         pm.registerEvents(new UpdateEvents(), this);
+        pm.registerEvents(new ChatListener(), this);
     }
 
 

@@ -79,4 +79,10 @@ public class files {
         }
     }
 
+    public static String getChatFormat(UUID uuid){
+        Player p = Bukkit.getPlayer(uuid);
+        assert p != null;
+        return getPrefix(uuid) + p.getName();
+    }
+
 }
