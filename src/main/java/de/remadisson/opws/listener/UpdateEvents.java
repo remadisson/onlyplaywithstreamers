@@ -42,9 +42,8 @@ public class UpdateEvents implements Listener {
             } catch (InterruptedException interruptedException) {
                 interruptedException.printStackTrace();
             }
+                files.loadPermissions(online);
                 TablistManager.getInstance().updateTeam(online, files.getPrefix(online.getUniqueId()), files.getColor(online.getUniqueId()), "", files.getLevel(online.getUniqueId()));
-
-
             }
         });
     }

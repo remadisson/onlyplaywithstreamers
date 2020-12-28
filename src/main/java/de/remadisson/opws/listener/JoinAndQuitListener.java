@@ -24,7 +24,7 @@ public class JoinAndQuitListener implements Listener {
     @EventHandler
     public void onPreJoin(PlayerLoginEvent e){
         if(files.state == ServerState.CLOSED){
-            if(!streamer.contains(e.getPlayer().getUniqueId()) && !allowed.contains(e.getPlayer().getUniqueId()) && !e.getPlayer().isOp()) {
+            if(!streamer.contains(e.getPlayer().getUniqueId()) && !e.getPlayer().isOp()) {
                 e.disallow(PlayerLoginEvent.Result.KICK_WHITELIST, "§4Du wurdest gekickt!\n§cEs befindet sich derzeit kein Streamer auf dem Server!\n§bBitte komm später vorbei um dem Server beizutreten!");
             }
         } else if(files.state == ServerState.ERROR){
@@ -37,10 +37,10 @@ public class JoinAndQuitListener implements Listener {
 
     @EventHandler
     public void onJoin(PlayerJoinEvent e){
-        if((allowed.contains(e.getPlayer().getUniqueId()) || e.getPlayer().isOp()) && !streamer.contains(e.getPlayer().getUniqueId())){
+        if((e.getPlayer().isOp()) && !streamer.contains(e.getPlayer().getUniqueId())){
             e.setJoinMessage(null);
         } else {
-            e.setJoinMessage(prefix + "§a+ §5" + e.getPlayer().getName());
+            e.setJoinMessage(prefix + "§a+ " + files.getColor(e.getPlayer().getUniqueId()) + e.getPlayer().getName());
         }
 
         if(streamer.contains(e.getPlayer().getUniqueId())){
@@ -49,30 +49,38 @@ public class JoinAndQuitListener implements Listener {
             }
         }
 
-        updateHeaderAndFooter(e.getPlayer());
+        for(Player online : Bukkit.getOnlinePlayers()) {
+            updateHeaderAndFooter(online);
+        }
 
         TablistManager.getInstance().updateTeam(e.getPlayer(), files.getPrefix(e.getPlayer().getUniqueId()), files.getColor(e.getPlayer().getUniqueId()), "", files.getLevel(e.getPlayer().getUniqueId()));
 
         if(files.namecache.containsKey(e.getPlayer().getUniqueId())){
             files.namecache.remove(e.getPlayer().getUniqueId());
         }
+
+        files.loadPermissions(e.getPlayer());
     }
 
     @EventHandler
     public void onQuit(PlayerQuitEvent e){
 
-        if((allowed.contains(e.getPlayer().getUniqueId()) || e.getPlayer().isOp()) && !streamer.contains(e.getPlayer().getUniqueId())){
+        if((e.getPlayer().isOp()) && !streamer.contains(e.getPlayer().getUniqueId())){
             e.setQuitMessage(null);
         } else {
-            e.setQuitMessage(prefix + "§c- §5" + e.getPlayer().getName());
+            e.setQuitMessage(prefix + "§c- " + files.getColor(e.getPlayer().getUniqueId()) + e.getPlayer().getName());
         }
 
-        updateHeaderAndFooter(e.getPlayer());
+        for(Player online : Bukkit.getOnlinePlayers()) {
+            updateHeaderAndFooter(online);
+        }
 
         if(!files.namecache.containsKey(e.getPlayer().getUniqueId())){
             files.namecache.put(e.getPlayer().getUniqueId(), e.getPlayer().getName());
         }
 
+        e.getPlayer().removeAttachment(files.permissionAttachment.get(e.getPlayer().getUniqueId()));
+        files.permissionAttachment.remove(e.getPlayer().getUniqueId());
     }
 
     public static void updateHeaderAndFooter(Player p){

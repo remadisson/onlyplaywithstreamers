@@ -7,11 +7,16 @@ import net.minecraft.server.v1_16_R2.EnumChatFormat;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
+import org.bukkit.permissions.Permission;
+import org.bukkit.permissions.PermissionAttachment;
+import org.bukkit.permissions.PermissionAttachmentInfo;
+import org.yaml.snakeyaml.events.CollectionStartEvent;
 
-import java.util.HashMap;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 public class files {
 
@@ -41,29 +46,42 @@ public class files {
     public static final String streamerprefix = "§5§lSTREAMER §5";
     public static final String playerprefix = "§a";
 
+    public static HashMap<UUID,PermissionAttachment> permissionAttachment = new HashMap<UUID,PermissionAttachment>();
+
+    public static final UUID MaikEagle = UUID.fromString("9e944d6e-f797-4268-bbe0-b0937af502ca");
+
     public static String getPrefix(UUID uuid){
         OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
 
-        if(player.isOp()){
-            return adminprefix;
-        } else if(streamerManager.getStreamer().contains(uuid)){
-            return streamerprefix;
+        if(player.isOp() && (!player.getUniqueId().equals(MaikEagle) || !streamerManager.getStreamer().contains(uuid))){
+            if(uuid.equals(MaikEagle)){
+                return adminprefix + "§r§l";
+            }
+            return adminprefix + "§r";
         } else if(streamerManager.getAllowed().contains(uuid)){
-            return allowedprefix;
+            if(uuid.equals(MaikEagle)){
+                return allowedprefix + "§r§l";
+            }
+            return allowedprefix + "§r";
+        } else if(streamerManager.getStreamer().contains(uuid)){
+            if(uuid.equals(MaikEagle)){
+                return streamerprefix + "§r§l";
+            }
+            return streamerprefix + "§r";
         } else {
-            return playerprefix;
+            return playerprefix + "§r";
         }
     }
 
     public static EnumChatFormat getColor(UUID uuid){
         OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
 
-        if(player.isOp()){
+        if(player.isOp() && (!player.getUniqueId().equals(MaikEagle) || !streamerManager.getStreamer().contains(uuid))){
             return EnumChatFormat.DARK_RED;
-        } else if(streamerManager.getStreamer().contains(uuid)){
-            return EnumChatFormat.DARK_PURPLE;
         } else if(streamerManager.getAllowed().contains(uuid)){
             return EnumChatFormat.AQUA;
+        } else if(streamerManager.getStreamer().contains(uuid)){
+            return EnumChatFormat.DARK_PURPLE;
         } else {
             return EnumChatFormat.GREEN;
         }
@@ -71,12 +89,13 @@ public class files {
 
     public static Integer getLevel(UUID uuid){
         OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
-        if(player.isOp()){
+
+        if(player.isOp() && (!player.getUniqueId().equals(MaikEagle) || !streamerManager.getStreamer().contains(uuid))){
             return 0;
-        } else if(streamerManager.getStreamer().contains(uuid)){
-            return 20;
         } else if(streamerManager.getAllowed().contains(uuid)){
             return 10;
+        } else if(streamerManager.getStreamer().contains(uuid)){
+            return 20;
         } else {
             return 30;
         }
@@ -86,6 +105,41 @@ public class files {
         Player p = Bukkit.getPlayer(uuid);
         assert p != null;
         return getPrefix(uuid) + p.getName();
+    }
+
+    public static void loadPermissions(Player player){
+        UUID uuid = player.getUniqueId();
+
+        if(permissionAttachment.containsKey(uuid)) {
+            player.removeAttachment(permissionAttachment.get(uuid));
+            files.permissionAttachment.remove(uuid);
+        }
+
+        PermissionAttachment attachment = player.addAttachment(main.getInstance());
+        System.out.println(player.getName() + ": " + (streamerManager.getStreamer().contains(uuid) && !player.isOp()));
+        if(streamerManager.getAllowed().contains(uuid) && !player.isOp()) {
+            attachment.setPermission("minecraft.command.whitelist", true);
+            attachment.setPermission("minecraft.command.ban", true);
+            attachment.setPermission("minecraft.command.banlist", true);
+            attachment.setPermission("minecraft.command.gamemode", true);
+            attachment.setPermission("minecraft.command.teleport", true);
+
+        } else if(streamerManager.getStreamer().contains(uuid) && !player.isOp()){
+            attachment.setPermission("minecraft.command.whitelist", true);
+            attachment.unsetPermission("minecraft.command.ban");
+            attachment.unsetPermission("minecraft.command.banlist");
+            attachment.unsetPermission("minecraft.command.gamemode");
+            attachment.unsetPermission("minecraft.command.teleport");
+
+        } else if(!player.isOp()){
+            attachment.unsetPermission("minecraft.command.whitelist");
+            attachment.unsetPermission("minecraft.command.ban");
+            attachment.unsetPermission("minecraft.command.banlist");
+            attachment.unsetPermission("minecraft.command.gamemode");
+            attachment.unsetPermission("minecraft.command.teleport");
+        }
+
+        permissionAttachment.put(uuid, attachment);
     }
 
 }
