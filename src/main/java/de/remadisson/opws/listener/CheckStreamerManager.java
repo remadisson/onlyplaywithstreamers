@@ -22,13 +22,15 @@ public class CheckStreamerManager {
     private static int cycle_seconds = -2;
     private static int cycle_times = 0;
 
+    private static int worldcount = 1;
+
     public static void doCycle() {
         files.pool.execute(() -> {
 
             Bukkit.getScheduler().scheduleSyncRepeatingTask(main.getInstance(), () -> {
 
                 cycle_seconds++;
-
+                worldcount--;
                 if(cycle_seconds == -1){
                     CheckStreamerCycle(cycle_times);
                 }
@@ -38,6 +40,11 @@ public class CheckStreamerManager {
                     cycle_seconds = 0;
                     CheckStreamerCycle(cycle_times);
 
+                }
+
+                if(worldcount == 0){
+                    WorldListener.WorldCycle();
+                    worldcount = 60*60*30;
                 }
 
                 if(cycle_times == 6){

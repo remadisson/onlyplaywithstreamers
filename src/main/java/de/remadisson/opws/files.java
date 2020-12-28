@@ -7,16 +7,13 @@ import net.minecraft.server.v1_16_R2.EnumChatFormat;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
-import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionAttachment;
-import org.bukkit.permissions.PermissionAttachmentInfo;
-import org.yaml.snakeyaml.events.CollectionStartEvent;
+
 
 import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
+
 
 public class files {
 
@@ -116,7 +113,7 @@ public class files {
         }
 
         PermissionAttachment attachment = player.addAttachment(main.getInstance());
-        System.out.println(player.getName() + ": " + (streamerManager.getStreamer().contains(uuid) && !player.isOp()));
+
         if(streamerManager.getAllowed().contains(uuid) && !player.isOp()) {
             attachment.setPermission("minecraft.command.whitelist", true);
             attachment.setPermission("minecraft.command.ban", true);
