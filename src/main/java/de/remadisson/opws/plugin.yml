@@ -1,4 +1,5 @@
 name: OnlyPlayWithStreamers
+description: With this Plugin MaikEagle, is allowed to manage his event!
 author: remadisson
 version: 1.0.0
 website: https://www.remadyreturns.de/
@@ -12,3 +13,4 @@ commands:
     description: Allows to add other Allowed Players, so they can join idependently.
   whitelist:
     description: Replaces the default Whitelist-Command.
+    aliases: ['wl']
