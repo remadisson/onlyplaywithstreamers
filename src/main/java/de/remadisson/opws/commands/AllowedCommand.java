@@ -73,8 +73,15 @@ public class AllowedCommand implements CommandExecutor, TabCompleter {
             switch (firstArgument) {
                 case "add": {
                     Player player = Bukkit.getPlayer(secondArgument);
-                    UUID uuid = player != null ? player.getUniqueId() : MojangAPI.getPlayerProfile(secondArgument).getUUID();
+                    UUID uuid;
                     ArrayList<UUID> allowed = streamerManager.getAllowed();
+
+                    try {
+                        uuid = player != null ? player.getUniqueId() : MojangAPI.getPlayerProfile(secondArgument).getUUID();
+                    }catch(NullPointerException ex){
+                        sender.sendMessage(prefix + "§e" + secondArgument + "§c does not exists!");
+                        return false;
+                    }
 
                     if (allowed.contains(uuid)) {
                         sender.sendMessage(prefix + "§bAllowed§7-§bList §calready contains §4" + secondArgument);
@@ -87,8 +94,15 @@ public class AllowedCommand implements CommandExecutor, TabCompleter {
                 }
                 case "remove": {
                     Player player = Bukkit.getPlayer(secondArgument);
-                    UUID uuid = player != null ? player.getUniqueId() : MojangAPI.getPlayerProfile(secondArgument).getUUID();
+                    UUID uuid;
                     ArrayList<UUID> allowed = streamerManager.getAllowed();
+
+                    try {
+                        uuid = player != null ? player.getUniqueId() : MojangAPI.getPlayerProfile(secondArgument).getUUID();
+                    }catch(NullPointerException ex){
+                        sender.sendMessage(prefix + "§e" + secondArgument + "§c does not exists!");
+                        return false;
+                    }
 
                     if(!allowed.contains(uuid)){
                         sender.sendMessage(prefix + "§bAllowed§7-§bList §calready contains §4" + secondArgument);

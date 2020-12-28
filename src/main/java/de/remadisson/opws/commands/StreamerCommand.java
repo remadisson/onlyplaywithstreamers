@@ -76,8 +76,15 @@ public class StreamerCommand implements CommandExecutor, TabCompleter {
             switch (firstArgument) {
                 case "add": {
                     Player player = Bukkit.getPlayer(secondArgument);
-                    UUID uuid = player != null ? player.getUniqueId() : MojangAPI.getPlayerProfile(secondArgument).getUUID();
+                    UUID uuid;
                     ArrayList<UUID> streamer = streamerManager.getStreamer();
+
+                    try {
+                        uuid = player != null ? player.getUniqueId() : MojangAPI.getPlayerProfile(secondArgument).getUUID();
+                    }catch(NullPointerException ex){
+                        sender.sendMessage(prefix + "§e" + secondArgument + "§c does not exists!");
+                        return false;
+                    }
 
                     if (streamer.contains(uuid)) {
                         sender.sendMessage(prefix + "§5Streamers§7-§bList §calready contains §4" + secondArgument);
@@ -90,7 +97,15 @@ public class StreamerCommand implements CommandExecutor, TabCompleter {
                 }
                 case "remove": {
                     Player player = Bukkit.getPlayer(secondArgument);
-                    UUID uuid = player != null ? player.getUniqueId() : MojangAPI.getPlayerProfile(secondArgument).getUUID();
+                    UUID uuid;
+
+                    try {
+                        uuid = player != null ? player.getUniqueId() : MojangAPI.getPlayerProfile(secondArgument).getUUID();
+                    }catch(NullPointerException ex){
+                        sender.sendMessage(prefix + "§e" + secondArgument + "§c does not exists!");
+                        return false;
+                    }
+
                     ArrayList<UUID> streamer = streamerManager.getStreamer();
 
                     if(!streamer.contains(uuid)){
