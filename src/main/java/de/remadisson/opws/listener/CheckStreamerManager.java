@@ -63,7 +63,7 @@ public class CheckStreamerManager {
 
             if (files.state == ServerState.CLOSED) {
                 //Bukkit.getServer().getConsoleSender().sendMessage(console + "§eDer Server ist nun geöffnet.");
-                Bukkit.broadcastMessage(console + "§eDer Server ist nun geöffnet.");
+                Bukkit.broadcastMessage(prefix + "§eDer Server ist nun geöffnet.");
                 files.state = ServerState.OPEN;
             }
 
@@ -73,7 +73,7 @@ public class CheckStreamerManager {
                     temp_minutes = temp_minutes - 1;
                     //Bukkit.getServer().getConsoleSender().sendMessage(console + "§eNoch §6" + temp_minutes + " Minuten§e, bis der Server schließt!");
                     if(temp_minutes > 0) {
-                        Bukkit.broadcastMessage(console + "§eNoch §6" + temp_minutes + " Minuten§e, bis der Server schließt!");
+                        Bukkit.broadcastMessage(prefix + "§eNoch §6" + temp_minutes + " Minuten§e, bis der Server schließt!");
                     }
                 }
             }
@@ -83,11 +83,11 @@ public class CheckStreamerManager {
             ArrayList<UUID> allowed = streamerManager.getAllowed();
 
             //Bukkit.getServer().getConsoleSender().sendMessage(console + "§7Es ist nun kein Streamer mehr online, so werden alle Spieler ohne direkte berichtigung gekickt!");
-            Bukkit.broadcastMessage(console + "§eDer Server ist nun §cgeschlossen!");
-            Bukkit.broadcastMessage((console + "§7Es ist nun kein Streamer mehr online, so werden alle Spieler ohne direkte berichtigung gekickt!"));
+            Bukkit.broadcastMessage(prefix + "§eDer Server ist nun §cgeschlossen!");
+            Bukkit.broadcastMessage((prefix + "§7Es ist nun kein Streamer mehr online, so werden alle Spieler ohne direkte berichtigung gekickt!"));
 
             for (Player online : Bukkit.getOnlinePlayers()) {
-                if (!allowed.contains(online.getUniqueId()) && !online.getPlayer().isOp() &&!streamerManager.getStreamer().contains(online.getUniqueId())) {
+                if (!online.getPlayer().isOp() &&!streamerManager.getStreamer().contains(online.getUniqueId())) {
                     online.kickPlayer("§4Du wurdest gekickt!\n§cEs befindet sich derzeit kein Streamer auf dem Server!\n§bBitte komm später vorbei um dem Server beizutreten!");
 
                 }

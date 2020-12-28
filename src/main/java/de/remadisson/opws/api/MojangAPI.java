@@ -3,13 +3,11 @@ package de.remadisson.opws.api;
 import de.remadisson.opws.files;
 import de.remadisson.opws.mojang.JsonUtils;
 import de.remadisson.opws.mojang.PlayerProfile;
-import org.bukkit.entity.Player;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 public class MojangAPI {
 
