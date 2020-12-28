@@ -26,7 +26,7 @@ public class WhitelistCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!sender.hasPermission("minecraft.command.whitelist ")) {
+        if (!sender.hasPermission("minecraft.command.whitelist")) {
             sender.sendMessage(prefix + "§cYou do not have permission to execute this command!");
             return false;
         }
@@ -176,10 +176,10 @@ public class WhitelistCommand implements CommandExecutor, TabCompleter {
 
     public void sendHelp(CommandSender sender, int site) {
         sender.sendMessage(files.prefix + "§eHelp for §6/whitelist §f- §dStatus: " + (Bukkit.hasWhitelist() ? ("§atrue") : ("§cfalse")));
-        sender.sendMessage(files.prefix + "§f - §e/allowed on/off");
-        sender.sendMessage(files.prefix + "§f - §e/allowed add/remove <Name>");
-        sender.sendMessage(files.prefix + "§f - §e/allowed reload");
-        sender.sendMessage(files.prefix + "§f - §e/allowed list");
+        sender.sendMessage(files.prefix + "§f - §e/whitelist on/off");
+        sender.sendMessage(files.prefix + "§f - §e/whitelist add/remove <Name>");
+        sender.sendMessage(files.prefix + "§f - §e/whitelist reload");
+        sender.sendMessage(files.prefix + "§f - §e/whitelist list");
     }
 
     @Override
@@ -187,29 +187,30 @@ public class WhitelistCommand implements CommandExecutor, TabCompleter {
         List<String> flist = new ArrayList<>();
         List<String> parameters = new ArrayList<>(Arrays.asList("on", "off", "add", "remove", "reload", "list"));
 
-        if(args.length == 1){
-            for(String parameter : parameters){
-                if(parameter.startsWith(args[0].toLowerCase())){
-                    flist.add(parameter);
+        if(sender.hasPermission("minecraft.command.whitelist")) {
+            if (args.length == 1) {
+                for (String parameter : parameters) {
+                    if (parameter.startsWith(args[0].toLowerCase())) {
+                        flist.add(parameter);
+                    }
+                }
+            }
+
+            if (args.length == 2 && (args[0].toLowerCase().equals("add") || args[0].toLowerCase().equals("remove"))) {
+                for (OfflinePlayer whitelisted : Bukkit.getWhitelistedPlayers()) {
+                    String name = null;
+                    if (Objects.equals(whitelisted.getName(), null)) {
+                        name = MojangAPI.getPlayerProfile(whitelisted.getUniqueId()).getName();
+                    } else {
+                        name = whitelisted.getName();
+                    }
+
+                    if (name.startsWith(args[1].toLowerCase())) {
+                        flist.add(name);
+                    }
                 }
             }
         }
-
-        if(args.length == 2 && (args[0].toLowerCase().equals("add") || args[0].toLowerCase().equals("remove"))){
-            for(OfflinePlayer whitelisted : Bukkit.getWhitelistedPlayers()){
-                String name = null;
-                if(Objects.equals(whitelisted.getName(), null)){
-                    name = MojangAPI.getPlayerProfile(whitelisted.getUniqueId()).getName();
-                } else {
-                    name = whitelisted.getName();
-                }
-
-                if(name.startsWith(args[1].toLowerCase())){
-                    flist.add(name);
-                }
-            }
-        }
-
         return flist;
     }
 }
