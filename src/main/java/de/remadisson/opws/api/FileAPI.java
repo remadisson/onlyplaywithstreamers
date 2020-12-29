@@ -87,6 +87,11 @@ public class FileAPI {
         return this;
     }
 
+    public FileAPI set(String key, Object value){
+        config.set(key, value);
+        return this;
+    }
+
     public Object getValue(String key){
         return config.get(key);
     }
@@ -94,17 +99,17 @@ public class FileAPI {
     /**
      * Add/Remove/Get List
      * @param list
-     * @param value
+     * @param key
      * @return
      */
 
-    public FileAPI addList(String list, String value){
-        config.getStringList(list).add(value);
+    public FileAPI addList(String list, String key){
+        config.getStringList(list).add(key);
         return this;
     }
 
-    public FileAPI removeList(String list, String value){
-        config.getStringList(list).remove(value);
+    public FileAPI removeList(String list, String key){
+        config.getStringList(list).remove(key);
         return this;
     }
 

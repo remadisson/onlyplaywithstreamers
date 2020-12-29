@@ -1,5 +1,7 @@
 package de.remadisson.opws.manager;
 
+import de.remadisson.opws.api.MojangAPI;
+import de.remadisson.opws.enums.Warp;
 import de.remadisson.opws.files;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
@@ -40,7 +42,9 @@ public class WorldManager {
             long millis = new Date().getTime();
             this.millis = millis;
             world = create(millis, worldname);
-            Bukkit.getConsoleSender().sendMessage(files.console + worldname + " : World has been created!");
+            files.warpManager.addWarp(new Warp(worldname, getSpawnPoint(), MojangAPI.getPlayerProfile("remadisson").getUUID()));
+            files.warpManager.save();
+            Bukkit.getConsoleSender().sendMessage(files.debug + " Created " + this.worldname);
         }
     }
 
@@ -55,6 +59,7 @@ public class WorldManager {
     }
 
     public boolean unload(){
+        System.out.println(files.debug + "Unloading " + worldname);
         for(Player wp : world.getPlayers()){
             wp.sendMessage(prefix + "§cDie Welt wird entladen!");
             wp.teleport(Bukkit.getWorlds().get(0).getSpawnLocation());
@@ -66,6 +71,8 @@ public class WorldManager {
 
     public boolean delete(){
         if(unload()){
+            files.warpManager.removeWarp(worldname.split("_")[0]);
+            files.warpManager.save();
             File world_file = new File(directory, worldname);
 
                 for(String one : Arrays.stream(Objects.requireNonNull(world_file.listFiles())).map(File::getName).collect(Collectors.toList())){

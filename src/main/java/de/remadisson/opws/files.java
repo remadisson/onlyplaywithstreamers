@@ -2,7 +2,9 @@ package de.remadisson.opws;
 
 import de.remadisson.opws.api.FileAPI;
 import de.remadisson.opws.enums.ServerState;
+import de.remadisson.opws.enums.Warp;
 import de.remadisson.opws.manager.StreamerManager;
+import de.remadisson.opws.manager.WarpManager;
 import net.minecraft.server.v1_16_R2.EnumChatFormat;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -25,8 +27,11 @@ public class files {
 
     public static ServerState state = ServerState.CLOSED;
 
-    public static FileAPI fileAPI = new FileAPI("streamer.yml", "./plugins/OnlyPlayWithStreamers");
+    public static FileAPI fileAPI = new FileAPI("players.yml", "./plugins/OnlyPlayWithStreamers");
+    public static FileAPI warps = new FileAPI("warps.yml", "./plugins/OnlyPlayWithStreamers");
+
     public static StreamerManager streamerManager = new StreamerManager(fileAPI);
+    public static WarpManager warpManager = new WarpManager(warps);
 
     public static final HashMap<UUID, String> namecache = new HashMap<>();
 
