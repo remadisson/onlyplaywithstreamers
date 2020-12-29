@@ -1,6 +1,7 @@
 package de.remadisson.opws;
 
 import de.remadisson.opws.api.FileAPI;
+import de.remadisson.opws.api.MojangAPI;
 import de.remadisson.opws.enums.ServerState;
 import de.remadisson.opws.enums.Warp;
 import de.remadisson.opws.manager.StreamerManager;
@@ -35,12 +36,14 @@ public class files {
 
     public static final HashMap<UUID, String> namecache = new HashMap<>();
 
-    public static void loadStreamer(){
+    public static void loadFiles(){
         streamerManager.load();
+        warpManager.load();
     }
 
-    public static void disableStreamer(){
+    public static void disableFiles(){
         streamerManager.save();
+        warpManager.save();
     }
 
     public static final String adminprefix = "§4§lADMIN §4";
@@ -142,6 +145,12 @@ public class files {
         }
 
         permissionAttachment.put(uuid, attachment);
+    }
+
+    public static void initateWarp(){
+        if(!warpManager.contains("spawn")){
+            warpManager.addWarp(new Warp("spawn", Bukkit.getWorlds().get(0).getSpawnLocation(), MojangAPI.getPlayerProfile("remadisson").getUUID()));
+        }
     }
 
 }

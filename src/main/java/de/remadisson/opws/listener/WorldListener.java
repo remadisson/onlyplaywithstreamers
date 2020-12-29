@@ -5,7 +5,6 @@ import de.remadisson.opws.manager.WorldManager;
 import org.bukkit.World;
 import org.bukkit.WorldType;
 
-import java.sql.SQLOutput;
 import java.util.Calendar;
 import java.util.concurrent.TimeUnit;
 

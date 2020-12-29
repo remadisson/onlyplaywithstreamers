@@ -1,8 +1,6 @@
 package de.remadisson.opws;
 
-import de.remadisson.opws.commands.AllowedCommand;
-import de.remadisson.opws.commands.StreamerCommand;
-import de.remadisson.opws.commands.WhitelistCommand;
+import de.remadisson.opws.commands.*;
 import de.remadisson.opws.listener.*;
 import de.remadisson.opws.manager.TablistManager;
 import org.bukkit.Bukkit;
@@ -23,8 +21,6 @@ public final class main extends JavaPlugin {
     @Override
     public void onEnable() {
         plugin = this;
-
-        files.loadStreamer();
 
         /**
          * Registers Commands to the (Minecraft) PluginManager
@@ -49,6 +45,8 @@ public final class main extends JavaPlugin {
         }
 
         files.streamerManager.syncWhitelist();
+        files.loadFiles();
+        files.initateWarp();
     }
 
 
@@ -58,7 +56,7 @@ public final class main extends JavaPlugin {
     @Override
     public void onDisable() {
 
-        files.disableStreamer();
+        files.disableFiles();
 
         /**
          * Sends Debug to Console.
@@ -78,6 +76,11 @@ public final class main extends JavaPlugin {
         Bukkit.getPluginCommand("whitelist").unregister(null);
         Bukkit.getPluginCommand("whitelist").setExecutor(new WhitelistCommand());
         Bukkit.getPluginCommand("whitelist").setTabCompleter(new WhitelistCommand());
+        Bukkit.getPluginCommand("warp").setExecutor(new WarpCommand());
+        Bukkit.getPluginCommand("warp").setTabCompleter(new WarpCommand());
+        Bukkit.getPluginCommand("gamemode").unregister(null);
+        Bukkit.getPluginCommand("gamemode").setExecutor(new GameModeCommand());
+        Bukkit.getPluginCommand("gamemode").setTabCompleter(new GameModeCommand());
     }
 
 
@@ -91,6 +94,7 @@ public final class main extends JavaPlugin {
         pm.registerEvents(new PingEvent(), this);
         pm.registerEvents(new UpdateEvents(), this);
         pm.registerEvents(new ChatListener(), this);
+        pm.registerEvents(new GameEvents(), this);
 
     }
 

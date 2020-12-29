@@ -47,6 +47,10 @@ public class CheckStreamerManager {
                     worldcount = 60*60*30;
                 }
 
+                if(worldcount == 2){
+                    files.disableFiles();
+                }
+
                 if(cycle_times == 6){
                     cycle_times = 0;
                 }

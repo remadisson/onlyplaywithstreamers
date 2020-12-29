@@ -1,10 +1,14 @@
 package de.remadisson.opws.api;
 
+import de.remadisson.opws.files;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.SQLOutput;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 public class FileAPI {
 
@@ -79,7 +83,6 @@ public class FileAPI {
      * @param value
      * @return
      */
-
     public FileAPI addDefault(String key, Object value){
         if(config.get(key) == null){
             config.set(key, value);
@@ -120,6 +123,18 @@ public class FileAPI {
 
     public ArrayList<String> getStringList(String list){
         return (ArrayList<String>) config.getStringList(list);
+    }
+
+    /*
+    * Getting ConfigurationSections
+    * */
+
+    public ConfigurationSection getSection(String path){
+        if(config.getConfigurationSection(path) == null){
+            return config.createSection(path);
+        } else {
+            return config.getConfigurationSection(path);
+        }
     }
 
     public FileAPI reload(){

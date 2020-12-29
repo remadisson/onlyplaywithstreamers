@@ -91,7 +91,7 @@ public class StreamerManager {
     }
 
     public ArrayList<UUID> ConfigToList(String list){
-        ArrayList<UUID> arrayList = new ArrayList<>();
+            ArrayList<UUID> arrayList = new ArrayList<>();
 
         for(String userString : api.getStringList(list)){
             UUID uuid = UUID.fromString(userString);

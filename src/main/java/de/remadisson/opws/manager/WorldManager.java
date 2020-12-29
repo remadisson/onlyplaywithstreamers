@@ -37,15 +37,39 @@ public class WorldManager {
             this.worldname = folder.stream().filter(item -> item.toLowerCase().startsWith(worldname.toLowerCase())).collect(Collectors.toList()).get(0);
             millis = Long.parseLong(this.worldname.split("_")[1]);
             world = create(millis, worldname);
+            if(!files.warpManager.contains(worldname)) {
+                files.warpManager.addWarp(new Warp(worldname, getSpawnPoint(), MojangAPI.getPlayerProfile("remadisson").getUUID()));
+
+                files.pool.execute(() -> {
+                    try {
+                        Thread.sleep(2000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    files.warpManager.save();
+                });
+            }
 
         } else {
             long millis = new Date().getTime();
             this.millis = millis;
             world = create(millis, worldname);
             files.warpManager.addWarp(new Warp(worldname, getSpawnPoint(), MojangAPI.getPlayerProfile("remadisson").getUUID()));
-            files.warpManager.save();
+
+            files.pool.execute(() -> {
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                files.warpManager.save();
+            });
+
             Bukkit.getConsoleSender().sendMessage(files.debug + " Created " + this.worldname);
         }
+
+        setGameRule(GameRule.ANNOUNCE_ADVANCEMENTS, false);
+        setGameRule(GameRule.MOB_GRIEFING, false);
     }
 
     private World create(long millis, String worldname){
@@ -105,7 +129,7 @@ public class WorldManager {
         return false;
     }
 
-    public WorldManager setGameRule(GameRule<Object> gameRule, Object value){
+    public WorldManager setGameRule(GameRule gameRule, Object value){
         world.setGameRule(gameRule, value);
         return this;
     }
