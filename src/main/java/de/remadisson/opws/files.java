@@ -6,6 +6,7 @@ import de.remadisson.opws.enums.ServerState;
 import de.remadisson.opws.enums.Warp;
 import de.remadisson.opws.manager.StreamerManager;
 import de.remadisson.opws.manager.WarpManager;
+import de.remadisson.opws.manager.WorldManager;
 import net.minecraft.server.v1_16_R2.EnumChatFormat;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -26,13 +27,14 @@ public class files {
     public static String console = "§eOPWS " + prefix;
     public static String debug = "§7[§dDEBUG§7] " + console;
 
-    public static ServerState state = ServerState.CLOSED;
+    public static ServerState state = ServerState.ERROR;
 
     public static FileAPI fileAPI = new FileAPI("players.yml", "./plugins/OnlyPlayWithStreamers");
     public static FileAPI warps = new FileAPI("warps.yml", "./plugins/OnlyPlayWithStreamers");
 
     public static StreamerManager streamerManager = new StreamerManager(fileAPI);
     public static WarpManager warpManager = new WarpManager(warps);
+    public static HashMap<String, WorldManager> worldManager = new HashMap<>();
 
     public static final HashMap<UUID, String> namecache = new HashMap<>();
 
@@ -150,6 +152,12 @@ public class files {
     public static void initateWarp(){
         if(!warpManager.contains("spawn")){
             warpManager.addWarp(new Warp("spawn", Bukkit.getWorlds().get(0).getSpawnLocation(), MojangAPI.getPlayerProfile("remadisson").getUUID()));
+        }
+
+        for(Map.Entry<String, WorldManager> wm : worldManager.entrySet()){
+            if(!warpManager.contains(wm.getKey())){
+                warpManager.addWarp(new Warp(wm.getValue().get().getName().split("_")[0], wm.getValue().getSpawnPoint(), wm.getValue().get().getUID()));
+            }
         }
     }
 

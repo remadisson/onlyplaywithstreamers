@@ -31,8 +31,17 @@ public class JoinAndQuitListener implements Listener {
             e.disallow(PlayerLoginEvent.Result.KICK_OTHER, "§4Please inform a Admin:\n§cThe server encountered an error!");
 
         } else if(files.state == ServerState.OPEN){
+
+            if(Bukkit.getOnlinePlayers().size() == Bukkit.getMaxPlayers()){
+                if(e.getPlayer().isOp() || streamer.contains(e.getPlayer().getUniqueId())){
+                    e.allow();
+                    return;
+                }
+            }
+
             e.allow();
         }
+
     }
 
     @EventHandler
@@ -71,9 +80,6 @@ public class JoinAndQuitListener implements Listener {
             e.setQuitMessage(prefix + "§c- " + files.getColor(e.getPlayer().getUniqueId()) + e.getPlayer().getName());
         }
 
-        for(Player online : Bukkit.getOnlinePlayers()) {
-            updateHeaderAndFooter(online);
-        }
 
         if(!files.namecache.containsKey(e.getPlayer().getUniqueId())){
             files.namecache.put(e.getPlayer().getUniqueId(), e.getPlayer().getName());
@@ -81,11 +87,23 @@ public class JoinAndQuitListener implements Listener {
 
         e.getPlayer().removeAttachment(files.permissionAttachment.get(e.getPlayer().getUniqueId()));
         files.permissionAttachment.remove(e.getPlayer().getUniqueId());
+        files.pool.execute(() -> {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException interruptedException) {
+                interruptedException.printStackTrace();
+            }
+
+            for (Player online : Bukkit.getOnlinePlayers()){
+                updateHeaderAndFooter(online);
+            }
+
+        });
     }
 
     public static void updateHeaderAndFooter(Player p){
         p.setPlayerListHeader("§6§lCommunity-Server\n§c§lMaikEagle\n§7Online: §e" + Bukkit.getOnlinePlayers().size() + "§8/§7" + Bukkit.getServer().getMaxPlayers() + "\n ");
-        p.setPlayerListFooter(" \n§7Server-Addresse:\n§e"+Bukkit.getServer().getPort()+ "\n§5Twitch§7: §5MaikEaglee");
+        p.setPlayerListFooter(" \n§eYouTube§7: §eMaikEagle"+ "\n§5Twitch§7: §5MaikEaglee");
     }
 
 }

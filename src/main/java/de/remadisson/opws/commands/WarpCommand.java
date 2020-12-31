@@ -6,22 +6,19 @@ import de.remadisson.opws.manager.WarpManager;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
-import org.bukkit.Bukkit;
+import net.md_5.bungee.api.chat.TextComponent;
+import org.bukkit.Sound;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
+import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
 
-import net.md_5.bungee.api.chat.TextComponent;
-import org.bukkit.command.TabCompleter;
-import org.bukkit.entity.Player;
-
-import javax.xml.soap.Text;
 
 public class WarpCommand implements CommandExecutor, TabCompleter {
 
@@ -71,6 +68,8 @@ public class WarpCommand implements CommandExecutor, TabCompleter {
                     Warp warp = warps.get(firstArgument);
                     sender.sendMessage(prefix + "§eDu wurdest zu §6" + warp.getName() + "§e teleportiert!");
                     ((Player) sender).teleport(warp.getLocation());
+                    ((Player) sender).playSound(((Player) sender).getLocation(), Sound.ENTITY_SPLASH_POTION_BREAK, 5 , 1);
+
                     return true;
             }
         }

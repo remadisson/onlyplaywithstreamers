@@ -1,6 +1,7 @@
 package de.remadisson.opws;
 
 import de.remadisson.opws.commands.*;
+import de.remadisson.opws.enums.ServerState;
 import de.remadisson.opws.listener.*;
 import de.remadisson.opws.manager.TablistManager;
 import org.bukkit.Bukkit;
@@ -46,7 +47,7 @@ public final class main extends JavaPlugin {
 
         files.streamerManager.syncWhitelist();
         files.loadFiles();
-        files.initateWarp();
+        files.state = ServerState.CLOSED;
     }
 
 
@@ -55,7 +56,7 @@ public final class main extends JavaPlugin {
      */
     @Override
     public void onDisable() {
-
+        files.state = ServerState.ERROR;
         files.disableFiles();
 
         /**

@@ -16,12 +16,11 @@ public class WorldManager {
 
     private String prefix = files.prefix;
 
-    private String directory = "./plugins/../worlds/";
+    private final String directory = "./plugins/../worlds/";
     private String worldname;
-    private World.Environment environment;
-    private WorldType worldType;
-    private int resetDays = 7;
-    private long millis = new Date().getTime();
+    private final World.Environment environment;
+    private final WorldType worldType;
+    private final long millis;
 
     private World world = null;
 
@@ -37,33 +36,12 @@ public class WorldManager {
             this.worldname = folder.stream().filter(item -> item.toLowerCase().startsWith(worldname.toLowerCase())).collect(Collectors.toList()).get(0);
             millis = Long.parseLong(this.worldname.split("_")[1]);
             world = create(millis, worldname);
-            if(!files.warpManager.contains(worldname)) {
-                files.warpManager.addWarp(new Warp(worldname, getSpawnPoint(), MojangAPI.getPlayerProfile("remadisson").getUUID()));
 
-                files.pool.execute(() -> {
-                    try {
-                        Thread.sleep(2000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    files.warpManager.save();
-                });
-            }
 
         } else {
             long millis = new Date().getTime();
             this.millis = millis;
             world = create(millis, worldname);
-            files.warpManager.addWarp(new Warp(worldname, getSpawnPoint(), MojangAPI.getPlayerProfile("remadisson").getUUID()));
-
-            files.pool.execute(() -> {
-                try {
-                    Thread.sleep(2000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                files.warpManager.save();
-            });
 
             Bukkit.getConsoleSender().sendMessage(files.debug + " Created " + this.worldname);
         }

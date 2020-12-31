@@ -120,7 +120,7 @@ public class GameModeCommand implements CommandExecutor, TabExecutor {
         if (args.length == 1) {
             for (String gamemode : gamemodes) {
                 if (sender.hasPermission("minecraft.command.gamemode")){
-                    if (gamemode.startsWith(args[0])) {
+                    if (gamemode.startsWith(args[0].toLowerCase())) {
                         flist.add(gamemode);
                     }
                 }
@@ -130,7 +130,7 @@ public class GameModeCommand implements CommandExecutor, TabExecutor {
         if (args.length == 2) {
             if(sender.hasPermission("mincraft.command.gamemode"))
                 for (Player player : players) {
-                    if (player.getName().toLowerCase().startsWith(args[1])) {
+                    if (player.getName().toLowerCase().startsWith(args[1].toLowerCase())) {
                         flist.add(player.getName());
                     }
                 }
