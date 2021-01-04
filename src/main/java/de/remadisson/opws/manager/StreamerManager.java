@@ -32,9 +32,6 @@ public class StreamerManager {
 
     public StreamerManager removeStreamer(UUID uuid){
         streamer.remove(uuid);
-        if(whitelist.contains(Bukkit.getOfflinePlayer(uuid))) {
-            Bukkit.getOfflinePlayer(uuid).setWhitelisted(false);
-        }
         Bukkit.getPluginManager().callEvent(new PlayerChangePermissionEvent());
         return this;
     }
@@ -45,9 +42,6 @@ public class StreamerManager {
 
     public StreamerManager addAllowed(UUID uuid){
         allowed.add(uuid);
-        if(!whitelist.contains(Bukkit.getOfflinePlayer(uuid))) {
-            Bukkit.getOfflinePlayer(uuid).setWhitelisted(true);
-        }
         Bukkit.getPluginManager().callEvent(new PlayerChangePermissionEvent());
         return this;
     }

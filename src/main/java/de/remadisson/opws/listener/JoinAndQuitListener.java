@@ -23,30 +23,43 @@ public class JoinAndQuitListener implements Listener {
 
     @EventHandler
     public void onPreJoin(PlayerLoginEvent e){
-        if(files.state == ServerState.CLOSED){
-            if(!streamer.contains(e.getPlayer().getUniqueId()) && !e.getPlayer().isOp()) {
-                e.disallow(PlayerLoginEvent.Result.KICK_WHITELIST, "§4Du wurdest gekickt!\n§cEs befindet sich derzeit kein Streamer auf dem Server!\n§bBitte komm später vorbei um dem Server beizutreten!");
+
+        System.out.println(files.debug + "WHITELISTED >" + e.getPlayer().isWhitelisted());
+
+        if(files.state == ServerState.ERROR) {
+            e.disallow(PlayerLoginEvent.Result.KICK_OTHER, "§4Please inform an Admin:\n§cThe server encountered an error!");
+            return;
+        }
+
+
+        if(!streamer.contains(e.getPlayer().getUniqueId()) && !e.getPlayer().isOp()){
+            if(files.state == ServerState.CLOSED){
+                e.disallow(PlayerLoginEvent.Result.KICK_OTHER, "§4Du wurdest gekickt!\n§cEs befindet sich derzeit kein Streamer auf dem Server!\n§bBitte komm später vorbei um dem Server beizutreten!");
             }
+        }
+
+        /* if(files.state == ServerState.CLOSED){
+
+            if(!streamer.contains(e.getPlayer().getUniqueId()) && !e.getPlayer().isOp()) {
+                e.disallow(PlayerLoginEvent.Result.KICK_OTHER, "§4Du wurdest gekickt!\n§cEs befindet sich derzeit kein Streamer auf dem Server!\n§bBitte komm später vorbei um dem Server beizutreten!");
+            }
+
         } else if(files.state == ServerState.ERROR){
             e.disallow(PlayerLoginEvent.Result.KICK_OTHER, "§4Please inform a Admin:\n§cThe server encountered an error!");
-
         } else if(files.state == ServerState.OPEN){
 
-            if(Bukkit.getOnlinePlayers().size() == Bukkit.getMaxPlayers()){
+            if(Bukkit.getOnlinePlayers().size() >= (Bukkit.getMaxPlayers()-1)){
                 if(e.getPlayer().isOp() || streamer.contains(e.getPlayer().getUniqueId())){
                     e.allow();
-                    return;
                 }
             }
-
-            e.allow();
-        }
+        }*/
 
     }
 
     @EventHandler
     public void onJoin(PlayerJoinEvent e){
-        if((e.getPlayer().isOp()) && !streamer.contains(e.getPlayer().getUniqueId())){
+        if(e.getPlayer().isOp() && !streamer.contains(e.getPlayer().getUniqueId())){
             e.setJoinMessage(null);
         } else {
             e.setJoinMessage(prefix + "§a+ " + files.getColor(e.getPlayer().getUniqueId()) + e.getPlayer().getName());
@@ -74,7 +87,7 @@ public class JoinAndQuitListener implements Listener {
     @EventHandler
     public void onQuit(PlayerQuitEvent e){
 
-        if((e.getPlayer().isOp()) && !streamer.contains(e.getPlayer().getUniqueId())){
+        if(e.getPlayer().isOp() && !streamer.contains(e.getPlayer().getUniqueId())){
             e.setQuitMessage(null);
         } else {
             e.setQuitMessage(prefix + "§c- " + files.getColor(e.getPlayer().getUniqueId()) + e.getPlayer().getName());

@@ -45,10 +45,10 @@ public class CheckStreamerManager {
 
                 if(worldcount == 0){
                     WorldListener.WorldCycle();
-                    worldcount = 60*60*30;
+                    worldcount = 60*30;
                 }
 
-                if(worldcount == 60*60*30 - 2 && !initiateWarp){
+                if(worldcount == 60*30 - 2 && !initiateWarp){
                     files.initateWarp();
                     files.disableFiles();
                     initiateWarp = true;
@@ -91,7 +91,7 @@ public class CheckStreamerManager {
                     temp_minutes = temp_minutes - 1;
                     //Bukkit.getServer().getConsoleSender().sendMessage(console + "§eNoch §6" + temp_minutes + " Minuten§e, bis der Server schließt!");
                     if(temp_minutes > 0 && Bukkit.getOnlinePlayers().size() > 0) {
-                        Bukkit.broadcastMessage(prefix + "§eNoch §6" + temp_minutes + (temp_minutes > 1 || temp_minutes < -1 ? "Minuten" : "Minute") + "§e bis der Server schließt!");
+                        Bukkit.broadcastMessage(prefix + "§eNoch §6" + temp_minutes + (temp_minutes > 1 || temp_minutes < -1 ? " Minuten" : " Minute") + "§e bis der Server schließt!");
                     }
                 }
             }

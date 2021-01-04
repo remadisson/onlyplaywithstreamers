@@ -16,13 +16,15 @@ public final class main extends JavaPlugin {
     private final String console = files.console;
 
     private static main plugin;
+    
     /**
      * Init start sequence
      */
+
     @Override
     public void onEnable() {
         plugin = this;
-
+        files.loadFiles();
         /**
          * Registers Commands to the (Minecraft) PluginManager
          */
@@ -37,6 +39,7 @@ public final class main extends JavaPlugin {
          * Sends Debug to the Console.
          */
         Bukkit.getConsoleSender().sendMessage(console + "§aOnlyPlayWithStreamers started!");
+
         CheckStreamerManager.doCycle();
 
         for(Player online : Bukkit.getOnlinePlayers()){
@@ -46,7 +49,6 @@ public final class main extends JavaPlugin {
         }
 
         files.streamerManager.syncWhitelist();
-        files.loadFiles();
         files.state = ServerState.CLOSED;
     }
 
@@ -72,16 +74,22 @@ public final class main extends JavaPlugin {
     public void registerCommands(){
         Bukkit.getPluginCommand("streamer").setExecutor(new StreamerCommand());
         Bukkit.getPluginCommand("streamer").setTabCompleter(new StreamerCommand());
+
         Bukkit.getPluginCommand("allowed").setExecutor(new AllowedCommand());
         Bukkit.getPluginCommand("allowed").setTabCompleter(new AllowedCommand());
+
         Bukkit.getPluginCommand("whitelist").unregister(null);
         Bukkit.getPluginCommand("whitelist").setExecutor(new WhitelistCommand());
         Bukkit.getPluginCommand("whitelist").setTabCompleter(new WhitelistCommand());
+
         Bukkit.getPluginCommand("warp").setExecutor(new WarpCommand());
         Bukkit.getPluginCommand("warp").setTabCompleter(new WarpCommand());
+
         Bukkit.getPluginCommand("gamemode").unregister(null);
         Bukkit.getPluginCommand("gamemode").setExecutor(new GameModeCommand());
         Bukkit.getPluginCommand("gamemode").setTabCompleter(new GameModeCommand());
+
+        //Bukkit.getPluginCommand("setup").setExecutor(new SetupCommand());
     }
 
 

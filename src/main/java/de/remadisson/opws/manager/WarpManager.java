@@ -49,9 +49,9 @@ public class WarpManager {
 
         for(Map.Entry<String, Warp> entry : warps.entrySet()){
             String key = entry.getKey();
-                cs.set(key + ".location.x", entry.getValue().getLocation().getBlockX());
-                cs.set(key + ".location.y", entry.getValue().getLocation().getBlockY());
-                cs.set(key + ".location.z", entry.getValue().getLocation().getBlockZ());
+                cs.set(key + ".location.x", entry.getValue().getLocation().getX());
+                cs.set(key + ".location.y", entry.getValue().getLocation().getY());
+                cs.set(key + ".location.z", entry.getValue().getLocation().getZ());
                 cs.set(key + ".location.world", entry.getValue().getLocation().getWorld().getName());
                 cs.set(key + ".location.pitch", entry.getValue().getLocation().getPitch());
                 cs.set(key + ".location.yaw", entry.getValue().getLocation().getYaw());
@@ -77,8 +77,8 @@ public class WarpManager {
                                             cs.getDouble(entry + ".location.x"),
                                             cs.getDouble(entry + ".location.y"),
                                             cs.getDouble(entry + ".location.z"),
-                                            Float.parseFloat(cs.getString(entry + ".location.pitch")),
-                                            Float.parseFloat(cs.getString(entry + ".location.yaw"))),
+                                            Float.parseFloat(cs.getString(entry + ".location.yaw")),
+                                            Float.parseFloat(cs.getString(entry + ".location.pitch"))),
                                     UUID.fromString(api.getValue("warps." + entry + ".owner").toString())
                             ));
                 }

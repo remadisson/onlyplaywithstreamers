@@ -133,17 +133,42 @@ public class files {
 
         } else if(streamerManager.getStreamer().contains(uuid) && !player.isOp()){
             attachment.setPermission("minecraft.command.whitelist", true);
-            attachment.unsetPermission("minecraft.command.ban");
-            attachment.unsetPermission("minecraft.command.banlist");
-            attachment.unsetPermission("minecraft.command.gamemode");
-            attachment.unsetPermission("minecraft.command.teleport");
+            if(attachment.getPermissions().containsKey("minecraft.command.ban")) {
+                attachment.unsetPermission("minecraft.command.ban");
+            }
+
+            if(attachment.getPermissions().containsKey("minecraft.command.banlist")) {
+                attachment.unsetPermission("minecraft.command.banlist");
+            }
+
+            if(attachment.getPermissions().containsKey("minecraft.command.gamemode")) {
+                attachment.unsetPermission("minecraft.command.gamemode");
+            }
+
+            if(attachment.getPermissions().containsKey("minecraft.command.teleport")) {
+                attachment.unsetPermission("minecraft.command.teleport");
+            }
 
         } else if(!player.isOp()){
-            attachment.unsetPermission("minecraft.command.whitelist");
-            attachment.unsetPermission("minecraft.command.ban");
-            attachment.unsetPermission("minecraft.command.banlist");
-            attachment.unsetPermission("minecraft.command.gamemode");
-            attachment.unsetPermission("minecraft.command.teleport");
+            if(attachment.getPermissions().containsKey("minecraft.command.whitelist")) {
+                attachment.unsetPermission("minecraft.command.whitelist");
+            }
+
+            if(attachment.getPermissions().containsKey("minecraft.command.ban")) {
+                attachment.unsetPermission("minecraft.command.ban");
+            }
+
+            if(attachment.getPermissions().containsKey("minecraft.command.banlist")) {
+                attachment.unsetPermission("minecraft.command.banlist");
+            }
+
+            if(attachment.getPermissions().containsKey("minecraft.command.gamemode")) {
+                attachment.unsetPermission("minecraft.command.gamemode");
+            }
+
+            if(attachment.getPermissions().containsKey("minecraft.command.teleport")) {
+                attachment.unsetPermission("minecraft.command.teleport");
+            }
         }
 
         permissionAttachment.put(uuid, attachment);
