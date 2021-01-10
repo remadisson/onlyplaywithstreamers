@@ -1,7 +1,5 @@
 package de.remadisson.opws.manager;
 
-import de.remadisson.opws.api.MojangAPI;
-import de.remadisson.opws.enums.Warp;
 import de.remadisson.opws.files;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
@@ -13,28 +11,30 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class WorldManager {
-
     private String prefix = files.prefix;
 
     private final String directory = "./plugins/../worlds/";
+    private String filename;
     private String worldname;
     private final World.Environment environment;
     private final WorldType worldType;
     private final long millis;
+    private final boolean createWarp;
 
     private World world = null;
 
-    public WorldManager(String worldname, WorldType worldType, World.Environment environment){
+    public WorldManager(String worldname, WorldType worldType, World.Environment environment, boolean createWarp){
         this.worldname = worldname;
         this.environment = environment;
         this.worldType = worldType;
+        this.createWarp = createWarp;
 
         File dir = new File(directory);
         List<String> folder = Arrays.stream(Objects.requireNonNull(dir.listFiles())).map(File::getName).collect(Collectors.toList());
 
         if(folder.stream().anyMatch(item -> item.toLowerCase().startsWith(worldname.toLowerCase()))){
-            this.worldname = folder.stream().filter(item -> item.toLowerCase().startsWith(worldname.toLowerCase())).collect(Collectors.toList()).get(0);
-            millis = Long.parseLong(this.worldname.split("_")[1]);
+            filename = folder.stream().filter(item -> item.toLowerCase().startsWith(worldname.toLowerCase())).collect(Collectors.toList()).get(0);
+            millis = Long.parseLong(filename.split("_")[1]);
             world = create(millis, worldname);
 
 
@@ -43,7 +43,7 @@ public class WorldManager {
             this.millis = millis;
             world = create(millis, worldname);
 
-            Bukkit.getConsoleSender().sendMessage(files.debug + " Created " + this.worldname);
+            Bukkit.getConsoleSender().sendMessage(files.debug + " Created " + filename);
         }
 
         setGameRule(GameRule.ANNOUNCE_ADVANCEMENTS, false);
@@ -61,21 +61,21 @@ public class WorldManager {
     }
 
     public boolean unload(){
-        System.out.println(files.debug + "Unloading " + worldname);
+        System.out.println(files.debug + "Unloading " + filename);
         for(Player wp : world.getPlayers()){
             wp.sendMessage(prefix + "§cDie Welt wird entladen!");
             wp.teleport(Bukkit.getWorlds().get(0).getSpawnLocation());
         }
 
         Bukkit.getServer().unloadWorld(world, false);
-        return Bukkit.getWorld(this.worldname) == null;
+        return Bukkit.getWorld(filename) == null;
     }
 
     public boolean delete(){
         if(unload()){
-            files.warpManager.removeWarp(worldname.split("_")[0]);
+            files.warpManager.removeWarp(filename.split("_")[0]);
             files.warpManager.save();
-            File world_file = new File(directory, worldname);
+            File world_file = new File(directory, filename);
 
                 for(String one : Arrays.stream(Objects.requireNonNull(world_file.listFiles())).map(File::getName).collect(Collectors.toList())){
                     File inside = new File(world_file, one);
@@ -124,4 +124,15 @@ public class WorldManager {
         return millis;
     }
 
+    public String getWorldName(){
+        return worldname;
+    }
+
+    public String getFilename(){
+        return filename;
+    }
+
+    public boolean createWarp(){
+        return createWarp;
+    }
 }

@@ -9,11 +9,13 @@ public class Warp {
     private final String name;
     private final Location location;
     private final UUID owner;
+    private boolean available = true;
 
-    public Warp(String name, Location location, UUID owner){
+    public Warp(String name, Location location, UUID owner, boolean available){
         this.name = name.toLowerCase();
         this.location = location;
         this.owner = owner;
+        this.available = available;
     }
 
     public String getName(){
@@ -26,6 +28,14 @@ public class Warp {
 
     public UUID getOwner(){
         return owner;
+    }
+
+    public boolean getAvailable(){
+        return available;
+    }
+
+    public void setAvailable(boolean available){
+        this.available = available;
     }
 
 }

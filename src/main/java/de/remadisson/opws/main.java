@@ -24,7 +24,7 @@ public final class main extends JavaPlugin {
     @Override
     public void onEnable() {
         plugin = this;
-        files.loadFiles();
+
         /**
          * Registers Commands to the (Minecraft) PluginManager
          */
@@ -49,7 +49,6 @@ public final class main extends JavaPlugin {
         }
 
         files.streamerManager.syncWhitelist();
-        files.state = ServerState.CLOSED;
     }
 
 

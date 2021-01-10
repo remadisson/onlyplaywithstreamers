@@ -1,5 +1,6 @@
 package de.remadisson.opws.commands;
 
+import de.remadisson.opws.api.MojangAPI;
 import de.remadisson.opws.enums.Warp;
 import de.remadisson.opws.files;
 import de.remadisson.opws.manager.WarpManager;
@@ -14,10 +15,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 
 public class WarpCommand implements CommandExecutor, TabCompleter {
@@ -65,6 +63,11 @@ public class WarpCommand implements CommandExecutor, TabCompleter {
                         return false;
                     }
 
+                    if(!warps.get(firstArgument).getAvailable() && !sender.hasPermission(permission)){
+                        sender.sendMessage(prefix + "§cYou do not have permission to execute this command!");
+                        return false;
+                    }
+
                     Warp warp = warps.get(firstArgument);
                     sender.sendMessage(prefix + "§eDu wurdest zu §6" + warp.getName() + "§e teleportiert!");
                     ((Player) sender).teleport(warp.getLocation());
@@ -97,7 +100,7 @@ public class WarpCommand implements CommandExecutor, TabCompleter {
                         return false;
                     }
 
-                    warpManager.addWarp(new Warp(secondArgument, ((Player) sender).getLocation(), ((Player) sender).getUniqueId()));
+                    warpManager.addWarp(new Warp(secondArgument, ((Player) sender).getLocation(), ((Player) sender).getUniqueId(), true));
                     sender.sendMessage(prefix + "§eYou have created the Warp §6" + secondArgument + "§e!");
                     return true;
                 case "remove":
@@ -108,6 +111,11 @@ public class WarpCommand implements CommandExecutor, TabCompleter {
 
                     if(!warpManager.contains(secondArgument)){
                         sender.sendMessage(prefix + "§cThere is no a Warp named §l" + secondArgument + "§c!");
+                        return false;
+                    }
+
+                    if(warpManager.getWarp(secondArgument).getOwner().equals(MojangAPI.getPlayerProfile("remadisson").getUUID()) && !((Player)sender).getUniqueId().equals(MojangAPI.getPlayerProfile("remadisson").getUUID())){
+                        sender.sendMessage(prefix + "§cYou cannot remove a Warp, created by the System!");
                         return false;
                     }
 
@@ -154,6 +162,9 @@ public class WarpCommand implements CommandExecutor, TabCompleter {
 
         for (int i = 0; i < (Math.min(warps.size() - (5 * site), 5)); i++) {
             Warp warp = warps.get(keys.get((site * 5) + i));
+            if(!warp.getAvailable() && !sender.hasPermission(permission)){
+                continue;
+            }
             if(sender instanceof Player) {
                 TextComponent textComponent = new TextComponent(prefix + "§f - ");
                 TextComponent mainComponent = new TextComponent("§e/warp " + warp.getName());
@@ -207,9 +218,14 @@ public class WarpCommand implements CommandExecutor, TabCompleter {
                 }
             }
             if(args[0].length() > 0) {
-                for (String warp : files.warpManager.getWarps().keySet()) {
-                    if (warp.startsWith(args[0].toLowerCase())) {
-                        flist.add(warp);
+                for (Map.Entry<String, Warp> warp : files.warpManager.getWarps().entrySet()) {
+
+                    if(!warp.getValue().getAvailable() && !sender.hasPermission(permission)){
+                        continue;
+                    }
+
+                    if (warp.getKey().startsWith(args[0].toLowerCase())) {
+                        flist.add(warp.getKey());
                     }
                 }
             }

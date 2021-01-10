@@ -23,6 +23,10 @@ public class PingEvent implements Listener {
         } else if(state == ServerState.OPEN){
             e.setMotd("§a§lGeöffnet §f- §eSpiele mit!");
             e.setVersion("§aONLINE");
+        } else if(state == ServerState.STARTUP){
+            e.setMotd("§bSTARTUP SEQUENCE! - §aSlowdown, give us some time");
+            e.setVersion("§bSTARTUP");
+            e.setProtocolVersion(1);
         }
 
 

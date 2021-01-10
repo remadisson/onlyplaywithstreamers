@@ -7,9 +7,6 @@ import de.remadisson.opws.manager.StreamerManager;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
-import java.util.UUID;
-
 public class CheckStreamerManager {
 
     private final static StreamerManager streamerManager = files.streamerManager;
@@ -44,14 +41,16 @@ public class CheckStreamerManager {
                 }
 
                 if(worldcount == 0){
-                    WorldListener.WorldCycle();
+                    if(WorldListener.WorldCycle()) initiateWarp = false;
+                    if(WorldListener.NetherCycle()) initiateWarp = false;
                     worldcount = 60*30;
                 }
 
                 if(worldcount == 60*30 - 2 && !initiateWarp){
+                    files.loadFiles();
                     files.initateWarp();
-                    files.disableFiles();
                     initiateWarp = true;
+                    files.state = ServerState.CLOSED;
                 }
 
                 if(worldcount == 2){

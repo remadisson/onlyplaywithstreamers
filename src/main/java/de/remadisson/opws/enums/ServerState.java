@@ -2,6 +2,6 @@ package de.remadisson.opws.enums;
 
 public enum ServerState {
 
-    OPEN, CLOSED, ERROR;
+    OPEN, CLOSED, ERROR, STARTUP;
 
 }

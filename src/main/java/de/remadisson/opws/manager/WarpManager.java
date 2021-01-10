@@ -8,6 +8,7 @@ import org.bukkit.configuration.ConfigurationSection;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 public class WarpManager {
@@ -56,6 +57,7 @@ public class WarpManager {
                 cs.set(key + ".location.pitch", entry.getValue().getLocation().getPitch());
                 cs.set(key + ".location.yaw", entry.getValue().getLocation().getYaw());
                 cs.set(key + ".owner", entry.getValue().getOwner().toString());
+                cs.set(key + ".available", entry.getValue().getAvailable());
 
         }
 
@@ -73,13 +75,14 @@ public class WarpManager {
                             entry,
                             new Warp(
                                     entry,
-                                    new Location(Bukkit.getWorld(cs.getString( entry + ".location.world")),
+                                    new Location(Bukkit.getWorld(Objects.requireNonNull(cs.getString(entry + ".location.world"))),
                                             cs.getDouble(entry + ".location.x"),
                                             cs.getDouble(entry + ".location.y"),
                                             cs.getDouble(entry + ".location.z"),
-                                            Float.parseFloat(cs.getString(entry + ".location.yaw")),
-                                            Float.parseFloat(cs.getString(entry + ".location.pitch"))),
-                                    UUID.fromString(api.getValue("warps." + entry + ".owner").toString())
+                                            Float.parseFloat(Objects.requireNonNull(cs.getString(entry + ".location.yaw"))),
+                                            Float.parseFloat(Objects.requireNonNull(cs.getString(entry + ".location.pitch")))),
+                                    UUID.fromString(api.getValue("warps." + entry + ".owner").toString()),
+                                    cs.getBoolean(  entry + ".available")
                             ));
                 }
             }

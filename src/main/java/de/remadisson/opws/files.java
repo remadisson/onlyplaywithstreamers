@@ -12,11 +12,13 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.PermissionAttachment;
+import org.bukkit.permissions.PermissionAttachmentInfo;
 
 
 import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 
 public class files {
@@ -27,7 +29,7 @@ public class files {
     public static String console = "§eOPWS " + prefix;
     public static String debug = "§7[§dDEBUG§7] " + console;
 
-    public static ServerState state = ServerState.ERROR;
+    public static ServerState state = ServerState.STARTUP;
 
     public static FileAPI fileAPI = new FileAPI("players.yml", "./plugins/OnlyPlayWithStreamers");
     public static FileAPI warps = new FileAPI("warps.yml", "./plugins/OnlyPlayWithStreamers");
@@ -123,6 +125,8 @@ public class files {
         }
 
         PermissionAttachment attachment = player.addAttachment(main.getInstance());
+        ArrayList<String> permissions = attachment.getPermissible().getEffectivePermissions().stream().map(PermissionAttachmentInfo::getPermission).collect(Collectors.toCollection(ArrayList::new));
+
 
         if(streamerManager.getAllowed().contains(uuid) && !player.isOp()) {
             attachment.setPermission("minecraft.command.whitelist", true);
@@ -133,42 +137,73 @@ public class files {
 
         } else if(streamerManager.getStreamer().contains(uuid) && !player.isOp()){
             attachment.setPermission("minecraft.command.whitelist", true);
-            if(attachment.getPermissions().containsKey("minecraft.command.ban")) {
-                attachment.unsetPermission("minecraft.command.ban");
+            if(permissions.contains("minecraft.command.ban")) {
+                attachment.setPermission("minecraft.command.ban", false);
             }
 
-            if(attachment.getPermissions().containsKey("minecraft.command.banlist")) {
-                attachment.unsetPermission("minecraft.command.banlist");
+            if(permissions.contains("minecraft.command.banlist")) {
+                attachment.setPermission("minecraft.command.banlist", false);
             }
 
-            if(attachment.getPermissions().containsKey("minecraft.command.gamemode")) {
-                attachment.unsetPermission("minecraft.command.gamemode");
+            if(permissions.contains("minecraft.command.gamemode")) {
+                attachment.setPermission("minecraft.command.gamemode", false);
             }
 
-            if(attachment.getPermissions().containsKey("minecraft.command.teleport")) {
-                attachment.unsetPermission("minecraft.command.teleport");
+            if(permissions.contains("minecraft.command.teleport")) {
+                attachment.setPermission("minecraft.command.teleport", false);
+            }
+
+            // Default Commands, that shouldn't be allowed
+            if(permissions.contains("bukkit.command.plugins")) {
+                attachment.setPermission("bukkit.command.plugins", false);
+            }
+            if(permissions.contains("bukkit.command.version")) {
+                attachment.setPermission("bukkit.command.version", false);
+            }
+            if(permissions.contains("bukkit.command.help")) {
+                attachment.setPermission("bukkit.command.help", false);
+            }
+            if(permissions.contains("bukkit.command.me")) {
+                attachment.setPermission("bukkit.command.me", false);
             }
 
         } else if(!player.isOp()){
-            if(attachment.getPermissions().containsKey("minecraft.command.whitelist")) {
-                attachment.unsetPermission("minecraft.command.whitelist");
+
+            if(permissions.contains("minecraft.command.whitelist")) {
+                attachment.setPermission("minecraft.command.whitelist", false);
             }
 
-            if(attachment.getPermissions().containsKey("minecraft.command.ban")) {
-                attachment.unsetPermission("minecraft.command.ban");
+            if(permissions.contains("minecraft.command.ban")) {
+                attachment.setPermission("minecraft.command.ban", false);
             }
 
-            if(attachment.getPermissions().containsKey("minecraft.command.banlist")) {
-                attachment.unsetPermission("minecraft.command.banlist");
+            if(permissions.contains("minecraft.command.banlist")) {
+                attachment.setPermission("minecraft.command.banlist", false);
             }
 
-            if(attachment.getPermissions().containsKey("minecraft.command.gamemode")) {
-                attachment.unsetPermission("minecraft.command.gamemode");
+            if(permissions.contains("minecraft.command.gamemode")) {
+                attachment.setPermission("minecraft.command.gamemode", false);
             }
 
-            if(attachment.getPermissions().containsKey("minecraft.command.teleport")) {
-                attachment.unsetPermission("minecraft.command.teleport");
+            if(permissions.contains("minecraft.command.teleport")) {
+                attachment.setPermission("minecraft.command.teleport", false);
             }
+
+            // Default Commands, that shouldn't be allowed
+
+            if(attachment.getPermissible().hasPermission("bukkit.command.plugins")) {
+                attachment.setPermission("bukkit.command.plugins", false);
+            }
+            if(permissions.contains("bukkit.command.version")) {
+                attachment.setPermission("bukkit.command.version", false);
+            }
+            if(permissions.contains("bukkit.command.help")) {
+                attachment.setPermission("bukkit.command.help", false);
+            }
+            if(permissions.contains("minecraft.command.me")) {
+                attachment.setPermission("minecraft.command.me", false);
+            }
+
         }
 
         permissionAttachment.put(uuid, attachment);
@@ -176,12 +211,12 @@ public class files {
 
     public static void initateWarp(){
         if(!warpManager.contains("spawn")){
-            warpManager.addWarp(new Warp("spawn", Bukkit.getWorlds().get(0).getSpawnLocation(), MojangAPI.getPlayerProfile("remadisson").getUUID()));
+            warpManager.addWarp(new Warp("spawn", Bukkit.getWorlds().get(0).getSpawnLocation(), MojangAPI.getPlayerProfile("remadisson").getUUID(), true));
         }
 
         for(Map.Entry<String, WorldManager> wm : worldManager.entrySet()){
             if(!warpManager.contains(wm.getKey())){
-                warpManager.addWarp(new Warp(wm.getValue().get().getName().split("_")[0], wm.getValue().getSpawnPoint(), wm.getValue().get().getUID()));
+                warpManager.addWarp(new Warp(wm.getValue().get().getName().split("_")[0], wm.getValue().getSpawnPoint(), wm.getValue().get().getUID(), wm.getValue().createWarp()));
             }
         }
     }
