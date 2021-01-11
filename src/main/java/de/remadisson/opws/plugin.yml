@@ -21,3 +21,5 @@ commands:
   gamemode:
     description: Changes your gamemode, bitch!
     aliases: ['gm']
+  city:
+    description: Allows Streamers to add own cities.

@@ -4,6 +4,7 @@ import de.remadisson.opws.commands.*;
 import de.remadisson.opws.enums.ServerState;
 import de.remadisson.opws.listener.*;
 import de.remadisson.opws.manager.TablistManager;
+import de.remadisson.opws.commands.WarpCommand;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
@@ -88,7 +89,9 @@ public final class main extends JavaPlugin {
         Bukkit.getPluginCommand("gamemode").setExecutor(new GameModeCommand());
         Bukkit.getPluginCommand("gamemode").setTabCompleter(new GameModeCommand());
 
-        //Bukkit.getPluginCommand("setup").setExecutor(new SetupCommand());
+        Bukkit.getPluginCommand("city").setExecutor(new CityCommand());
+        Bukkit.getPluginCommand("city").setTabCompleter(new CityCommand());
+
     }
 
 

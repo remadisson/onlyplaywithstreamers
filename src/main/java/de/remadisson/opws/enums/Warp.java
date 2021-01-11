@@ -22,6 +22,10 @@ public class Warp {
         return name;
     }
 
+    public String getFirstUpperName(){
+        return name.replaceFirst(name.substring(0,1), name.substring(0,1).toUpperCase());
+    }
+
     public Location getLocation(){
         return location;
     }

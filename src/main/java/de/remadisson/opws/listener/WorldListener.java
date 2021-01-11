@@ -16,6 +16,7 @@ public class WorldListener {
     private static Duration temp_nether;
     private static boolean farmWeltStatus = false;
     private static boolean netherStatus = false;
+    private static int interval = 24;
 
     public static boolean WorldCycle(){
         WorldManager wm =  new WorldManager("farmwelt", WorldType.NORMAL, World.Environment.NORMAL, true);
@@ -31,7 +32,7 @@ public class WorldListener {
 
         Duration distance = Duration.between(cal_old.getTime().toInstant(), cal_new.getTime().toInstant());
 
-        if(temp_farmwelt == null || distance.toDays() == (temp_farmwelt.toDays() + 1) || ((distance.toHours() % 12) == 0)) {
+        if(temp_farmwelt == null || distance.toDays() == (temp_farmwelt.toDays() + 1) || ((distance.toHours() % interval) == 0)) {
             if(!farmWeltStatus) {
                 System.out.println(files.debug + "§dFarmwelt Exists since: " + sdf.format(cal_old.getTime()) + " §7- §eAlready existing Days §b" + distance.toDays() + "§8/§e7 §8(§b" + distance.toHours() + " Hours§8)");
                 farmWeltStatus = true;
@@ -67,7 +68,7 @@ public class WorldListener {
 
         Duration distance = Duration.between(cal_old.getTime().toInstant(), cal_new.getTime().toInstant());
 
-        if(temp_nether == null || distance.toDays() == (temp_nether.toDays() + 1) || ((distance.toHours() % 12) == 0)) {
+        if(temp_nether == null || distance.toDays() == (temp_nether.toDays() + 1) || ((distance.toHours() % interval) == 0)) {
             if(!netherStatus) {
                 System.out.println(files.debug + "§dNether Exists since: " + sdf.format(cal_old.getTime()) + " §7- §eAlready existing Days §b" + distance.toDays() + "§8/§e30 §8(§b" + distance.toHours() + " Hours§8)");
                 netherStatus = true;

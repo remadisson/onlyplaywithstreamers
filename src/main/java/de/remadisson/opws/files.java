@@ -4,6 +4,7 @@ import de.remadisson.opws.api.FileAPI;
 import de.remadisson.opws.api.MojangAPI;
 import de.remadisson.opws.enums.ServerState;
 import de.remadisson.opws.enums.Warp;
+import de.remadisson.opws.manager.CityManager;
 import de.remadisson.opws.manager.StreamerManager;
 import de.remadisson.opws.manager.WarpManager;
 import de.remadisson.opws.manager.WorldManager;
@@ -35,6 +36,7 @@ public class files {
     public static FileAPI warps = new FileAPI("warps.yml", "./plugins/OnlyPlayWithStreamers");
 
     public static StreamerManager streamerManager = new StreamerManager(fileAPI);
+    public static CityManager cityManager = new CityManager(warps);
     public static WarpManager warpManager = new WarpManager(warps);
     public static HashMap<String, WorldManager> worldManager = new HashMap<>();
 
@@ -43,11 +45,13 @@ public class files {
     public static void loadFiles(){
         streamerManager.load();
         warpManager.load();
+        cityManager.load();
     }
 
     public static void disableFiles(){
         streamerManager.save();
         warpManager.save();
+        cityManager.save();
     }
 
     public static final String adminprefix = "§4§lADMIN §4";
@@ -134,9 +138,13 @@ public class files {
             attachment.setPermission("minecraft.command.banlist", true);
             attachment.setPermission("minecraft.command.gamemode", true);
             attachment.setPermission("minecraft.command.teleport", true);
+            attachment.setPermission("opws.city", true);
 
         } else if(streamerManager.getStreamer().contains(uuid) && !player.isOp()){
+
             attachment.setPermission("minecraft.command.whitelist", true);
+            attachment.setPermission("opws.city", true);
+
             if(permissions.contains("minecraft.command.ban")) {
                 attachment.setPermission("minecraft.command.ban", false);
             }
@@ -153,6 +161,8 @@ public class files {
                 attachment.setPermission("minecraft.command.teleport", false);
             }
 
+
+
             // Default Commands, that shouldn't be allowed
             if(permissions.contains("bukkit.command.plugins")) {
                 attachment.setPermission("bukkit.command.plugins", false);
@@ -168,6 +178,10 @@ public class files {
             }
 
         } else if(!player.isOp()){
+
+            if(permissions.contains("opws.city")){
+                attachment.setPermission("opws.city", false);
+            }
 
             if(permissions.contains("minecraft.command.whitelist")) {
                 attachment.setPermission("minecraft.command.whitelist", false);
