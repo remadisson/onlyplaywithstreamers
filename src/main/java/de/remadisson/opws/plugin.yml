@@ -10,7 +10,7 @@ main: de.remadisson.opws.main
 commands:
   streamer:
     description: Allows to add Streamers to the List, so they can join.
-  allowed:
+  worker:
     description: Allows to add other Allowed Players, so they can join idependently.
   whitelist:
     description: Replaces the default Whitelist-Command.
@@ -23,3 +23,5 @@ commands:
     aliases: ['gm']
   city:
     description: Allows Streamers to add own cities.
+  setup:
+    description: Set some fudamental Variables for the maintenance part of the Event.

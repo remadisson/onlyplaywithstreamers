@@ -1,5 +1,6 @@
 package de.remadisson.opws;
 
+import de.remadisson.opws.arena.ArenaEvents;
 import de.remadisson.opws.commands.*;
 import de.remadisson.opws.enums.ServerState;
 import de.remadisson.opws.listener.*;
@@ -75,8 +76,8 @@ public final class main extends JavaPlugin {
         Bukkit.getPluginCommand("streamer").setExecutor(new StreamerCommand());
         Bukkit.getPluginCommand("streamer").setTabCompleter(new StreamerCommand());
 
-        Bukkit.getPluginCommand("allowed").setExecutor(new AllowedCommand());
-        Bukkit.getPluginCommand("allowed").setTabCompleter(new AllowedCommand());
+        Bukkit.getPluginCommand("worker").setExecutor(new WorkerCommand());
+        Bukkit.getPluginCommand("worker").setTabCompleter(new WorkerCommand());
 
         Bukkit.getPluginCommand("whitelist").unregister(null);
         Bukkit.getPluginCommand("whitelist").setExecutor(new WhitelistCommand());
@@ -92,6 +93,9 @@ public final class main extends JavaPlugin {
         Bukkit.getPluginCommand("city").setExecutor(new CityCommand());
         Bukkit.getPluginCommand("city").setTabCompleter(new CityCommand());
 
+        Bukkit.getPluginCommand("setup").setExecutor(new SetupCommand());
+        Bukkit.getPluginCommand("setup").setTabCompleter(new SetupCommand());
+
     }
 
 
@@ -106,7 +110,7 @@ public final class main extends JavaPlugin {
         pm.registerEvents(new UpdateEvents(), this);
         pm.registerEvents(new ChatListener(), this);
         pm.registerEvents(new GameEvents(), this);
-
+        pm.registerEvents(new ArenaEvents(), this);
     }
 
 

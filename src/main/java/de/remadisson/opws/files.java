@@ -2,12 +2,11 @@ package de.remadisson.opws;
 
 import de.remadisson.opws.api.FileAPI;
 import de.remadisson.opws.api.MojangAPI;
+import de.remadisson.opws.arena.ArenaManager;
 import de.remadisson.opws.enums.ServerState;
 import de.remadisson.opws.enums.Warp;
-import de.remadisson.opws.manager.CityManager;
-import de.remadisson.opws.manager.StreamerManager;
-import de.remadisson.opws.manager.WarpManager;
-import de.remadisson.opws.manager.WorldManager;
+import de.remadisson.opws.enums.WorkerState;
+import de.remadisson.opws.manager.*;
 import net.minecraft.server.v1_16_R2.EnumChatFormat;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -24,7 +23,7 @@ import java.util.stream.Collectors;
 
 public class files {
 
-    public static Executor pool = Executors.newCachedThreadPool();
+    public static Executor pool = Executors.newFixedThreadPool(10);
 
     public static String prefix = "§8» §r";
     public static String console = "§eOPWS " + prefix;
@@ -32,26 +31,40 @@ public class files {
 
     public static ServerState state = ServerState.STARTUP;
 
-    public static FileAPI fileAPI = new FileAPI("players.yml", "./plugins/OnlyPlayWithStreamers");
-    public static FileAPI warps = new FileAPI("warps.yml", "./plugins/OnlyPlayWithStreamers");
+    private static final String folder = "./plugins/OnlyPlayWithStreamers";
+    private static final String dataFolder = folder + "/data";
+    public static final FileAPI config = new FileAPI("config.yml", folder);
+    public static final FileAPI players = new FileAPI("players.yml", dataFolder);
+    public static final FileAPI warps = new FileAPI("warps.yml", dataFolder);
+    public static final FileAPI arenaFile = new FileAPI("arenas.yml", dataFolder);
 
-    public static StreamerManager streamerManager = new StreamerManager(fileAPI);
+    public static StreamerManager streamerManager = new StreamerManager(players);
     public static CityManager cityManager = new CityManager(warps);
     public static WarpManager warpManager = new WarpManager(warps);
     public static HashMap<String, WorldManager> worldManager = new HashMap<>();
+    public static HashMap<String, ArenaManager> arenaManager = new HashMap<>();
 
     public static final HashMap<UUID, String> namecache = new HashMap<>();
+
+    public static WorkerState workerState = WorkerState.valueOf(config.getDefault("workerState", "maintenance").toString().toUpperCase());
+    public static boolean maintenance = Boolean.parseBoolean(config.getDefault("maintenance", false).toString());
 
     public static void loadFiles(){
         streamerManager.load();
         warpManager.load();
         cityManager.load();
+        ArenaManager.load();
     }
 
     public static void disableFiles(){
         streamerManager.save();
         warpManager.save();
         cityManager.save();
+        ArenaManager.save();
+
+        config.set("maintenance", maintenance);
+        config.set("workerState", workerState.name());
+        config.save();
     }
 
     public static final String adminprefix = "§4§lADMIN §4";
@@ -68,21 +81,21 @@ public class files {
 
         if(player.isOp() && (!player.getUniqueId().equals(MaikEagle) || !streamerManager.getStreamer().contains(uuid))){
             if(uuid.equals(MaikEagle)){
-                return adminprefix + "§r§l";
+                return adminprefix;
             }
-            return adminprefix + "§r";
-        } else if(streamerManager.getAllowed().contains(uuid)){
+            return adminprefix;
+        } else if(streamerManager.getWorker().contains(uuid)){
             if(uuid.equals(MaikEagle)){
-                return allowedprefix + "§r§l";
+                return allowedprefix;
             }
-            return allowedprefix + "§r";
+            return allowedprefix;
         } else if(streamerManager.getStreamer().contains(uuid)){
             if(uuid.equals(MaikEagle)){
-                return streamerprefix + "§r§l";
+                return "§5§lS§d§lT§5§lR§d§lE§5§lA§d§lM§5§lE§d§lR §5";
             }
-            return streamerprefix + "§r";
+            return streamerprefix;
         } else {
-            return playerprefix + "§r";
+            return playerprefix;
         }
     }
 
@@ -91,9 +104,14 @@ public class files {
 
         if(player.isOp() && (!player.getUniqueId().equals(MaikEagle) || !streamerManager.getStreamer().contains(uuid))){
             return EnumChatFormat.DARK_RED;
-        } else if(streamerManager.getAllowed().contains(uuid)){
+        } else if(streamerManager.getWorker().contains(uuid)){
             return EnumChatFormat.AQUA;
         } else if(streamerManager.getStreamer().contains(uuid)){
+
+            if(uuid.equals(MaikEagle)){
+               return EnumChatFormat.DARK_PURPLE;
+            }
+
             return EnumChatFormat.DARK_PURPLE;
         } else {
             return EnumChatFormat.GREEN;
@@ -105,11 +123,24 @@ public class files {
 
         if(player.isOp() && (!player.getUniqueId().equals(MaikEagle) || !streamerManager.getStreamer().contains(uuid))){
             return 0;
-        } else if(streamerManager.getAllowed().contains(uuid)){
+        } else if(streamerManager.getWorker().contains(uuid)){
+            if(uuid.equals(MaikEagle)){
+                return 8;
+            }
             return 10;
         } else if(streamerManager.getStreamer().contains(uuid)){
+
+            if(uuid.equals(MaikEagle)){
+                return 18;
+            }
+
             return 20;
         } else {
+
+            if(uuid.equals(MaikEagle)){
+                return 28;
+            }
+
             return 30;
         }
     }
@@ -132,13 +163,14 @@ public class files {
         ArrayList<String> permissions = attachment.getPermissible().getEffectivePermissions().stream().map(PermissionAttachmentInfo::getPermission).collect(Collectors.toCollection(ArrayList::new));
 
 
-        if(streamerManager.getAllowed().contains(uuid) && !player.isOp()) {
+        if(streamerManager.getWorker().contains(uuid) && !player.isOp()) {
             attachment.setPermission("minecraft.command.whitelist", true);
             attachment.setPermission("minecraft.command.ban", true);
             attachment.setPermission("minecraft.command.banlist", true);
             attachment.setPermission("minecraft.command.gamemode", true);
             attachment.setPermission("minecraft.command.teleport", true);
             attachment.setPermission("opws.city", true);
+            attachment.setPermission("worldedit.*", true);
 
         } else if(streamerManager.getStreamer().contains(uuid) && !player.isOp()){
 
@@ -161,7 +193,9 @@ public class files {
                 attachment.setPermission("minecraft.command.teleport", false);
             }
 
-
+            if(permissions.contains("worldedit.*")){
+                attachment.setPermission("worldedit.*", false);
+            }
 
             // Default Commands, that shouldn't be allowed
             if(permissions.contains("bukkit.command.plugins")) {
@@ -203,6 +237,10 @@ public class files {
                 attachment.setPermission("minecraft.command.teleport", false);
             }
 
+            if(permissions.contains("worldedit.*")){
+                attachment.setPermission("worldedit.*", false);
+            }
+
             // Default Commands, that shouldn't be allowed
 
             if(attachment.getPermissible().hasPermission("bukkit.command.plugins")) {
@@ -234,5 +272,7 @@ public class files {
             }
         }
     }
+
+
 
 }

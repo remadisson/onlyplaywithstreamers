@@ -42,8 +42,8 @@ public class WorldManager {
             long millis = new Date().getTime();
             this.millis = millis;
             world = create(millis, worldname);
-
-            Bukkit.getConsoleSender().sendMessage(files.debug + " Created " + filename);
+            filename = worldname;
+            Bukkit.getConsoleSender().sendMessage(files.debug + " Created " + worldname);
         }
 
         setGameRule(GameRule.ANNOUNCE_ADVANCEMENTS, false);

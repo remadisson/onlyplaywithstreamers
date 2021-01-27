@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-public class AllowedCommand implements CommandExecutor, TabCompleter {
+public class WorkerCommand implements CommandExecutor, TabCompleter {
 
 
     private final String console = files.console;
@@ -27,7 +27,7 @@ public class AllowedCommand implements CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 
-        if (!sender.hasPermission("opws.allowed")) {
+        if (!sender.hasPermission("opws.worker")) {
             sender.sendMessage(prefix + "§cYou do not have permission to execute this command!");
             return false;
         }
@@ -41,18 +41,18 @@ public class AllowedCommand implements CommandExecutor, TabCompleter {
 
             switch (firstArgument) {
                 case "add":
-                    sender.sendMessage(prefix + "§f - §e/allowed add <Name>");
+                    sender.sendMessage(prefix + "§f - §e/worker add <Name>");
                     break;
                 case "remove":
-                    sender.sendMessage(prefix + "§f - §e/allowed remove <Name>");
+                    sender.sendMessage(prefix + "§f - §e/worker remove <Name>");
                     break;
                 case "list":
                     files.pool.execute(() -> {
-                        sendAllowedList(sender, 0);
+                        sendWorkerList(sender, 0);
                     });
                     break;
                 case "sync":
-                    if(!sender.hasPermission("opws.allowed.sync")){
+                    if(!sender.hasPermission("opws.worker.sync")){
                         sender.sendMessage(prefix + "§cYou do not have permission to execute this command!");
                         return false;
                     }
@@ -74,7 +74,7 @@ public class AllowedCommand implements CommandExecutor, TabCompleter {
                 case "add": {
                     Player player = Bukkit.getPlayer(secondArgument);
                     UUID uuid;
-                    ArrayList<UUID> allowed = streamerManager.getAllowed();
+                    ArrayList<UUID> worker = streamerManager.getWorker();
 
                     try {
                         uuid = player != null ? player.getUniqueId() : MojangAPI.getPlayerProfile(secondArgument).getUUID();
@@ -83,19 +83,19 @@ public class AllowedCommand implements CommandExecutor, TabCompleter {
                         return false;
                     }
 
-                    if (allowed.contains(uuid)) {
-                        sender.sendMessage(prefix + "§bAllowed§7-§bList §calready contains §4" + secondArgument);
+                    if (worker.contains(uuid)) {
+                        sender.sendMessage(prefix + "§bWorker§7-§bList §calready contains §4" + secondArgument);
                         return false;
                     }
 
-                    streamerManager.addAllowed(uuid);
-                    sender.sendMessage(prefix + "§aThe Player §2" + secondArgument + "§a is now §bAllowed!");
+                    streamerManager.addWorker(uuid);
+                    sender.sendMessage(prefix + "§aThe Player §2" + secondArgument + "§a is now §bWorker!");
                     return false;
                 }
                 case "remove": {
                     Player player = Bukkit.getPlayer(secondArgument);
                     UUID uuid;
-                    ArrayList<UUID> allowed = streamerManager.getAllowed();
+                    ArrayList<UUID> worker = streamerManager.getWorker();
 
                     try {
                         uuid = player != null ? player.getUniqueId() : MojangAPI.getPlayerProfile(secondArgument).getUUID();
@@ -104,18 +104,18 @@ public class AllowedCommand implements CommandExecutor, TabCompleter {
                         return false;
                     }
 
-                    if(!allowed.contains(uuid)){
-                        sender.sendMessage(prefix + "§bAllowed§7-§bList §calready contains §4" + secondArgument);
+                    if(!worker.contains(uuid)){
+                        sender.sendMessage(prefix + "§bWorker§7-§bList §calready contains §4" + secondArgument);
                         return false;
                     }
 
-                    streamerManager.removeAllowed(uuid);
-                    sender.sendMessage(prefix + "§aThe Player §2" + secondArgument + "§a is §cnot §bAllowed §aanymore!");
+                    streamerManager.removeWorker(uuid);
+                    sender.sendMessage(prefix + "§aThe Player §2" + secondArgument + "§a is §cnot §bWorker §aanymore!");
                     return false;
                 }
                 case "list":
                     try {
-                        sendAllowedList(sender, Integer.parseInt(secondArgument));
+                        sendWorkerList(sender, Integer.parseInt(secondArgument));
                     }catch(NumberFormatException ex){
                         ex.printStackTrace();
                     }
@@ -132,22 +132,22 @@ public class AllowedCommand implements CommandExecutor, TabCompleter {
     }
 
     public void sendHelp(CommandSender sender, int site) {
-        sender.sendMessage(prefix + "§eHelp for §6/allowed");
-        sender.sendMessage(prefix + "§f - §e/allowed add <Name>");
-        sender.sendMessage(prefix + "§f - §e/allowed remove <Name>");
-        sender.sendMessage(prefix + "§f - §e/allowed list <Site>");
+        sender.sendMessage(prefix + "§eHelp for §6/worker");
+        sender.sendMessage(prefix + "§f - §e/worker add <Name>");
+        sender.sendMessage(prefix + "§f - §e/worker remove <Name>");
+        sender.sendMessage(prefix + "§f - §e/worker list <Site>");
     }
 
-    public void sendAllowedList(CommandSender sender, int site) {
-        ArrayList<UUID> allowed = streamerManager.getAllowed();
+    public void sendWorkerList(CommandSender sender, int site) {
+        ArrayList<UUID> worker = streamerManager.getWorker();
 
-        int maxsites = (int) Math.ceil(allowed.size() / 6);
+        int maxsites = (int) Math.ceil(worker.size() / 6);
 
         if (site - 1 > maxsites) {
             site = maxsites + 1;
         }
 
-        if (allowed.isEmpty()) {
+        if (worker.isEmpty()) {
             sender.sendMessage(prefix + "§cThere are currently no entries.");
             return;
         }
@@ -156,11 +156,11 @@ public class AllowedCommand implements CommandExecutor, TabCompleter {
             site = site - 1;
         }
 
-        sender.sendMessage(prefix + "§bAllowed §6Page §8[§b" + (site + 1) + "§7/§e" + (maxsites + 1) + "§8]");
+        sender.sendMessage(prefix + "§bWorker §6Page §8[§b" + (site + 1) + "§7/§e" + (maxsites + 1) + "§8]");
 
-        for (int i = 0; i < (Math.min(allowed.size() - (5 * site), 5)); i++) {
-            Player player = Bukkit.getPlayer(allowed.get((site * 5) + i));
-            sender.sendMessage(prefix + "§f - " + (player != null ? "§a" + player.getName() : "§c" + MojangAPI.getPlayerProfile(allowed.get((site * 5) + i)).getName()) + " §7- §fWhitelist: §b" + Bukkit.getWhitelistedPlayers().contains(Bukkit.getOfflinePlayer(MojangAPI.getPlayerProfile(allowed.get((site * 5) + i)).getUUID())));
+        for (int i = 0; i < (Math.min(worker.size() - (5 * site), 5)); i++) {
+            Player player = Bukkit.getPlayer(worker.get((site * 5) + i));
+            sender.sendMessage(prefix + "§f - " + (player != null ? "§a" + player.getName() : "§c" + MojangAPI.getPlayerProfile(worker.get((site * 5) + i)).getName()) + " §7- §fWhitelist: §b" + Bukkit.getWhitelistedPlayers().contains(Bukkit.getOfflinePlayer(MojangAPI.getPlayerProfile(worker.get((site * 5) + i)).getUUID())));
         }
 
         if (site != maxsites) {
@@ -174,13 +174,13 @@ public class AllowedCommand implements CommandExecutor, TabCompleter {
         ArrayList<String> indexList = new ArrayList<>(Arrays.asList("add", "remove", "list"));
 
         if(args.length == 1){
-            if(sender.hasPermission("opws.allowed")) {
+            if(sender.hasPermission("opws.worker")) {
                 for(String s : indexList){
                     if(s.startsWith(args[0].toLowerCase())){
                         flist.add(s);
                     }
                 }
-            } else if(sender.hasPermission("opws.allowed.sync")){
+            } else if(sender.hasPermission("opws.worker.sync")){
                 if("sync".startsWith(args[0].toLowerCase())){
                     flist.add("sync");
                 }
@@ -188,13 +188,13 @@ public class AllowedCommand implements CommandExecutor, TabCompleter {
         }
 
         if(args.length == 2){
-            if(sender.hasPermission("opws.allowed")) {
+            if(sender.hasPermission("opws.worker")) {
                 if (args[0].toLowerCase().equals("add") || args[0].toLowerCase().equals("remove")) {
                     for (String name : Bukkit.getOnlinePlayers().stream().map(Player::getName).collect(Collectors.toList())) {
                         if (name.toLowerCase().startsWith(args[1].toLowerCase())) flist.add(name);
                     }
                 } else if (args[0].toLowerCase().equals("list")) {
-                    int maxsites = (int) Math.ceil(streamerManager.getAllowed().size() / 6);
+                    int maxsites = (int) Math.ceil(streamerManager.getWorker().size() / 6);
                     for(int i = 1; i <= maxsites; i++){
                         flist.add(String.valueOf(i));
                     }

@@ -51,6 +51,9 @@ public class WorldListener {
             return true;
         }
 
+        WorldManager test = new WorldManager("testworld", WorldType.FLAT, World.Environment.NORMAL, false);
+        files.worldManager.put(test.getWorldName(), test);
+
         return false;
     }
 

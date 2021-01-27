@@ -132,6 +132,7 @@ public class WhitelistCommand implements CommandExecutor, TabCompleter {
                         return false;
                     }
 
+                    Bukkit.getWhitelistedPlayers().add(offlinePlayer);
                     offlinePlayer.setWhitelisted(true);
                     sender.sendMessage(prefix + "§eThe Player §6§l" + secondRaw + "§e is now whitelisted!");
 
@@ -159,6 +160,7 @@ public class WhitelistCommand implements CommandExecutor, TabCompleter {
                         return false;
                     }
 
+                    Bukkit.getWhitelistedPlayers().remove(offlinePlayer);
                     offlinePlayer.setWhitelisted(false);
                     sender.sendMessage(prefix + "§eThe Player §6§l" + secondRaw + "§e not whitelisted anymore!");
 

@@ -12,14 +12,23 @@ public class PingEvent implements Listener {
     public void onServerPing(PaperServerListPingEvent e){
         ServerState state = files.state;
 
+        if(files.maintenance){
+            e.setMotd("§c§ka§r§4§lMaintenance §7- §4Wartungarbeiten!§c§ka");
+            e.setVersion("§cOFFLINE");
+            e.setHidePlayers(true);
+            e.setProtocolVersion(1);
+            return;
+        }
+
         if(state == ServerState.CLOSED){
             e.setMotd("§c§lGeschlossen §7- §cDerzeit kein Streamer online!");
             e.setVersion("§cOFFLINE");
             e.setHidePlayers(true);
-            e.setProtocolVersion(0);
+            e.setProtocolVersion(1);
         } else if(state == ServerState.ERROR){
             e.setMotd("§cERROR §4- §cPlease inform an Admin!");
             e.setVersion("§4ERROR");
+            e.setProtocolVersion(1);
         } else if(state == ServerState.OPEN){
             e.setMotd("§a§lGeöffnet §f- §eSpiele mit!");
             e.setVersion("§aONLINE");

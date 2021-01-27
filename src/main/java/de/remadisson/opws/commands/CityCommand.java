@@ -124,8 +124,8 @@ public class CityCommand implements CommandExecutor, TabCompleter {
                         return false;
                     }
 
-                    if((sender instanceof Player) && (cityManager.getCity(secondArgument).getOwner().equals(((Player) sender).getUniqueId()) || sender.isOp())){
-                        sender.sendMessage(prefix + "This is not your City!");
+                    if((sender instanceof Player) && (!cityManager.getCity(secondArgument).getOwner().equals(((Player) sender).getUniqueId()) || !sender.isOp())){
+                        sender.sendMessage(prefix + "§cThis is not your City!");
                         return false;
                     }
 

@@ -16,6 +16,7 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 public class WarpCommand implements CommandExecutor, TabCompleter {
@@ -49,6 +50,15 @@ public class WarpCommand implements CommandExecutor, TabCompleter {
                     }
                     sender.sendMessage(prefix + "§f - §e/warp remove <Name>");
                     return true;
+
+                case "edit":
+                    if(!sender.hasPermission(permission)){
+                        sender.sendMessage(prefix + "§cYou do not have permission to execute this command!");
+                        return false;
+                    }
+                    sender.sendMessage(prefix + "§f - §e/warp edit <warp> <flag> <value>");
+                    return true;
+
                 case "list":
                     sendWarpsList(sender, 0);
                     return true;
@@ -130,18 +140,70 @@ public class WarpCommand implements CommandExecutor, TabCompleter {
                         sender.sendMessage(prefix + "§cDein Arugment entspricht keiner Zahl!");
                     }
                     return true;
+
+                case "edit":
+                    sender.sendMessage(prefix + "§f - §e/warp edit <warp> <flag> <value>");
+                    return true;
+
                 default:
                     sendHelp(sender, 0);
                     return true;
             }
         }
 
+        if(args.length == 4){
+            String firstArgument = args[0].toLowerCase();
+            String secondArgument = args[1].toLowerCase();
+            String thirdArgument = args[2].toLowerCase();
+            String fourthArgument = args[3].toLowerCase();
+
+            String[] flags = {"available"};
+
+            HashMap<String, Warp> warps = files.warpManager.getWarps();
+
+            if ("edit".equals(firstArgument)) {
+
+                if(!warps.containsKey(secondArgument)){
+                    sender.sendMessage(prefix + "§cThis Warp is not created yet!");
+                    return false;
+                }
+
+                if(!thirdArgument.equalsIgnoreCase(flags[0])){
+                    sender.sendMessage(prefix + "§cThis Flag§7(§e" + thirdArgument + "§7) couldn't be found!");
+                    return true;
+                }
+
+                Warp warp = warps.get(secondArgument);
+
+                switch(fourthArgument){
+                    case "true":
+                    case "1":
+                        warp.setAvailable(true);
+                        sender.sendMessage(prefix + "§eThe Warp §a" + secondArgument + "§e is now §aavailable!");
+                        return true;
+
+                    case "false":
+                    case "0":
+                        warp.setAvailable(false);
+                        sender.sendMessage(prefix + "§eThe Warp §c" + secondArgument + "§e is now §cvanished for others §7(without permission)§c!");
+                        return true;
+                }
+
+                return true;
+            }
+
+            sendHelp(sender, 0);
+            return true;
+        }
+
         return false;
     }
 
     public void sendWarpsList(CommandSender sender, int site){
-        HashMap<String, Warp> warps = files.warpManager.getWarps();
+        HashMap<String, Warp> warps = files.warpManager.getWarps().entrySet().stream().sorted(Map.Entry.comparingByValue(Comparator.comparing(Warp::getAvailable))).collect(Collectors.toMap(e-> e.getKey(), e -> e.getValue(), (e1, e2) -> e2, LinkedHashMap::new));
         List<String> keys = new ArrayList<>(warps.keySet());
+
+        Collections.reverse(keys);
 
         int maxsites = (int) Math.ceil(warps.size() / 6);
 
@@ -171,6 +233,11 @@ public class WarpCommand implements CommandExecutor, TabCompleter {
                 mainComponent.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/warp " + warp.getName()));
                 mainComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder("§eClick to warp directly to " + warp.getName()).create()));
                 textComponent.addExtra(mainComponent);
+
+                if(sender.hasPermission(permission)){
+                    textComponent.addExtra(" §7- §bAvailable§7: " + (warp.getAvailable() ? "§atrue" : "§cfalse"));
+                }
+
                 sender.spigot().sendMessage(textComponent);
             } else {
                 sender.sendMessage(prefix + "§f - §e" + warp.getName());
@@ -190,6 +257,13 @@ public class WarpCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage(prefix + "§f - §e/warp add <Name>");
             sender.sendMessage(prefix + "§f - §e/warp remove <Name>");
             sender.sendMessage(prefix + "§f - §e/warp list <Site>");
+            sender.sendMessage(prefix + "§f - §e/warp edit <warp> <flag> <value>");
+
+            /**
+             * Flags:
+             *      Available: Allows just Players with the Permission to see the Warp
+             */
+
         } else {
             sender.sendMessage(prefix + "§eHelp for §6/warp");
             sender.sendMessage(prefix + "§f - §e/warp <Name>");
@@ -200,7 +274,7 @@ public class WarpCommand implements CommandExecutor, TabCompleter {
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         ArrayList<String> flist = new ArrayList<>();
-        ArrayList<String> indexListP = new ArrayList<>(Arrays.asList("add", "remove"));
+        ArrayList<String> indexListP = new ArrayList<>(Arrays.asList("add", "remove", "edit"));
         ArrayList<String> indexList = new ArrayList<>(Arrays.asList("list"));
 
         if(args.length == 1){
@@ -235,7 +309,7 @@ public class WarpCommand implements CommandExecutor, TabCompleter {
 
         if(args.length == 2){
             if(sender.hasPermission(permission)) {
-                if (args[0].toLowerCase().equals("remove")) {
+                if (args[0].toLowerCase().equals("remove") || args[0].equalsIgnoreCase("edit")) {
                     for (String warp : files.warpManager.getWarps().keySet()) {
                         if (warp.toLowerCase().startsWith(args[1].toLowerCase())) flist.add(warp);
                     }

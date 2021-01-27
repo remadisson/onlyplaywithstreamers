@@ -7,6 +7,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v1_16_R2.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 
+import java.awt.*;
 import java.util.HashMap;
 import java.util.UUID;
 
@@ -31,9 +32,13 @@ public class TablistManager {
         ScoreboardTeam team = scoreboard.createTeam(s);
 
         if(p.getUniqueId().equals(files.MaikEagle)){
-            team.setColor(EnumChatFormat.BOLD);
+            team.setPrefix(new ChatComponentText("§l" + prefix));
+        } else {
+            team.setPrefix(new ChatComponentText(prefix));
         }
-        team.setPrefix(new ChatComponentText(prefix));
+
+        team.setColor(color);
+
         team.setSuffix(new ChatComponentText(suffix));
 
         teams.put(p.getUniqueId(), s);

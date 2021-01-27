@@ -95,6 +95,14 @@ public class FileAPI {
         return this;
     }
 
+    public Object getDefault(String key, Object value){
+        if(config.get(key) == null){
+            config.set(key, value);
+        }
+
+        return config.get(key);
+    }
+
     public Object getValue(String key){
         return config.get(key);
     }

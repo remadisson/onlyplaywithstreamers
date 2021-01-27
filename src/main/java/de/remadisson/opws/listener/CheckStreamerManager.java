@@ -30,13 +30,21 @@ public class CheckStreamerManager {
                 cycle_seconds++;
                 worldcount--;
                 if(cycle_seconds == -1){
-                    CheckStreamerCycle(cycle_times);
+                    if(!files.maintenance) {
+                        CheckStreamerCycle(cycle_times);
+                    } else {
+                        files.state = ServerState.CLOSED;
+                    }
                 }
 
                 if (cycle_seconds == 10) {
                     cycle_times++;
                     cycle_seconds = 0;
-                    CheckStreamerCycle(cycle_times);
+                    if(!files.maintenance) {
+                        CheckStreamerCycle(cycle_times);
+                    } else {
+                        files.state = ServerState.CLOSED;
+                    }
 
                 }
 
