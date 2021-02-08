@@ -12,6 +12,7 @@ public class ArenaSetup {
     private Location joinTeam2;
     private Location spawnTeam1;
     private Location spawnTeam2;
+    private Location center;
     private String name;
 
     public ArenaSetup(Integer step, String name){
@@ -28,38 +29,36 @@ public class ArenaSetup {
         return step;
     }
 
-    public ArenaSetup setViewerSpawn(Location location){
+    public void setViewerSpawn(Location location){
         viewerSpawn = location;
-        return this;
     }
 
-    public ArenaSetup setDeadPlayerSpawn(Location location){
+    public void setDeadPlayerSpawn(Location location){
         deadPlayerSpawn = location;
-        return this;
     }
 
-    public ArenaSetup setExitSpawn(Location location){
+    public void setExitSpawn(Location location){
         exitSpawn = location;
-        return this;
     }
 
-    public ArenaSetup setJoinTeam1(Location location){
+    public void setJoinTeam1(Location location){
         joinTeam1 = location;
-        return this;
     }
 
-    public ArenaSetup setJoinTeam2(Location location){
+    public void setJoinTeam2(Location location){
         joinTeam2 = location;
-        return this;
-    }
-    public ArenaSetup setSpawnTeam1(Location location){
-        spawnTeam1 = location;
-        return this;
     }
 
-    public ArenaSetup setSpawnTeam2(Location location){
+    public void setSpawnTeam1(Location location){
+        spawnTeam1 = location;
+    }
+
+    public void setSpawnTeam2(Location location){
         spawnTeam2 = location;
-        return this;
+    }
+
+    public void setCenter(Location location){
+        center = location;
     }
 
     public Location getViewerSpawn(){
@@ -88,6 +87,10 @@ public class ArenaSetup {
 
     public Location getSpawnTeam2(){
         return spawnTeam2;
+    }
+
+    public Location getCenter(){
+        return center;
     }
 
     public String getName(){

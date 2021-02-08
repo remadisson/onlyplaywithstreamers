@@ -1,14 +1,11 @@
 package de.remadisson.opws.arena;
 
-import de.remadisson.opws.api.MojangAPI;
 import de.remadisson.opws.enums.TeamEnum;
-import org.bukkit.Bukkit;
+import de.remadisson.opws.files;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.InventoryType;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.PlayerInventory;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -16,13 +13,12 @@ import java.util.stream.Collectors;
 public class TeamManager {
 
     private final TeamEnum teamEnum;
-    private final HashMap<UUID, ArenaPlayer> memberMap;
+    private HashMap<UUID, ArenaPlayer> memberList = new HashMap<>();
     private int wins = 0;
     private int loses = 0;
 
-    public TeamManager(TeamEnum teamEnum, HashMap<UUID, ArenaPlayer> memberMap){
+    public TeamManager(TeamEnum teamEnum){
         this.teamEnum = teamEnum;
-        this.memberMap = memberMap;
     }
 
     public TeamEnum getTeamEnum() {
@@ -30,13 +26,10 @@ public class TeamManager {
     }
 
     public ArrayList<Player> getPlayerList(){
-        return memberMap.values().stream().map(ArenaPlayer::getPlayer).collect(Collectors.toCollection(ArrayList::new));
+        return memberList.values().stream().map(ArenaPlayer::getPlayer).collect(Collectors.toCollection(ArrayList::new));
     }
-
-    public Inventory getPlayerInventory(String playerName){
-        PlayerInventory playerInventory = (PlayerInventory) Bukkit.createInventory(null, InventoryType.PLAYER);
-        memberMap.get(MojangAPI.getPlayerProfile(playerName).getUUID()).getInventory().forEach((key, value) -> playerInventory.setItem(key, value));
-        return playerInventory;
+    public ArrayList<ArenaPlayer> getArenaPlayerList(){
+        return new ArrayList<>(memberList.values());
     }
 
     public boolean containsPlayer(UUID uuid){
@@ -48,29 +41,17 @@ public class TeamManager {
     }
 
     public HashMap<UUID, ArenaPlayer> getMemberMap(){
-        return memberMap;
+        return memberList;
     }
 
-    public boolean isAlive(){
-        boolean isAlive = false;
-
-        for(Player player : getPlayerList()){
-            if(!player.isDead()){
-                isAlive = true;
-            }
-        }
-
-        return isAlive;
-    }
 
     public TeamManager addWin(){
         wins++;
         return this;
     }
 
-    public TeamManager setWins(int wins){
+    public void setWins(int wins){
         this.wins = wins;
-        return this;
     }
 
     public int getWins(){
@@ -82,12 +63,27 @@ public class TeamManager {
         return this;
     }
 
-    public TeamManager setLoses(int loses){
+    public void setLoses(int loses){
         this.loses = loses;
-        return this;
     }
 
     public int getLoses() {
         return loses;
+    }
+
+    public void addMember(ArenaPlayer arenaPlayer){
+        memberList.put(arenaPlayer.getUUID(), arenaPlayer);
+    }
+
+    public void setMemberList(HashMap<UUID, ArenaPlayer> arenaPlayers){
+        memberList = arenaPlayers;
+    }
+
+    public void removeMember(UUID uuid){
+        memberList.remove(uuid);
+    }
+
+    public boolean isDead(){
+        return Collections.frequency(getArenaPlayerList().stream().map(ArenaPlayer::isDead).collect(Collectors.toList()), false) <= 0;
     }
 }

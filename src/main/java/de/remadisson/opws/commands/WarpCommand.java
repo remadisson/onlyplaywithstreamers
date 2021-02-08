@@ -73,6 +73,11 @@ public class WarpCommand implements CommandExecutor, TabCompleter {
                         return false;
                     }
 
+                    if(!files.allowWarp && (!sender.isOp() && !files.streamerManager.getWorker().contains(((Player) sender).getUniqueId()))){
+                        sender.sendMessage(prefix + "§cDu kannst dich momentan nicht Warpen!");
+                        return false;
+                    }
+
                     if(!warps.get(firstArgument).getAvailable() && !sender.hasPermission(permission)){
                         sender.sendMessage(prefix + "§cYou do not have permission to execute this command!");
                         return false;

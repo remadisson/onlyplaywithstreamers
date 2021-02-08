@@ -1,8 +1,11 @@
 package de.remadisson.opws.listener;
 
+import de.remadisson.opws.arena.ArenaManager;
 import de.remadisson.opws.arena.ArenaSetup;
 import de.remadisson.opws.commands.SetupCommand;
 import de.remadisson.opws.files;
+import de.remadisson.opws.main;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -66,11 +69,14 @@ public class ChatListener implements Listener {
                     setup.setSpawnTeam2(player.getLocation());
                     player.sendMessage(prefix + "§eNow step on a pressure plate, where §6Team 1 §ewill join!");
                     setup.nextStep();
-                    /*
+                    return;
+                case 8:
+                    setup.setCenter(player.getLocation());
                     player.sendMessage(prefix + "§eAll done! §6" + setup.getName() + " is now setup!");
-                    files.arenaManager.put(setup.getName(), new ArenaManager(setup.getName(), setup.getViewerSpawn(), setup.getDeadPlayerSpawn(), setup.getExitSpawn(), setup.getJoinTeam1(), setup.getJoinTeam2(), setup.getSpawnTeam1(), setup.getSpawnTeam2()));
+                    Bukkit.getScheduler().scheduleSyncDelayedTask(main.getInstance(), () -> {
+                        files.arenaManager.put(setup.getName(), new ArenaManager(setup.getName(), setup.getViewerSpawn(), setup.getDeadPlayerSpawn(), setup.getExitSpawn(), setup.getJoinTeam1(), setup.getJoinTeam2(), setup.getSpawnTeam1(), setup.getSpawnTeam2(), setup.getCenter()));
+                    }, 0);
                     SetupCommand.ArenaSetup.remove(player);
-                    */
                     return;
                 default:
                     player.sendMessage(prefix + "§4An error encountered! We don't know how, and don't even know what happend. Sorry :(");

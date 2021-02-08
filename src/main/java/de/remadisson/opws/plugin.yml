@@ -25,3 +25,7 @@ commands:
     description: Allows Streamers to add own cities.
   setup:
     description: Set some fudamental Variables for the maintenance part of the Event.
+  arena:
+    description: Completes the functionality for the Arena.
+  vanish:
+    description: Vanishes you from others!

@@ -1,6 +1,7 @@
 package de.remadisson.opws;
 
 import de.remadisson.opws.arena.ArenaEvents;
+import de.remadisson.opws.arena.ArenaManager;
 import de.remadisson.opws.commands.*;
 import de.remadisson.opws.enums.ServerState;
 import de.remadisson.opws.listener.*;
@@ -60,7 +61,19 @@ public final class main extends JavaPlugin {
     @Override
     public void onDisable() {
         files.state = ServerState.ERROR;
+
+        for(ArenaManager arenaManager : files.arenaManager.values()){
+            for (Player player : arenaManager.getFightersList()) {
+                arenaManager.removePlayer(player);
+            }
+
+            for(Player player : arenaManager.getViewer()){
+                arenaManager.removeViewer(player);
+            }
+        }
+
         files.disableFiles();
+        files.despawnHolograms();
 
         /**
          * Sends Debug to Console.
@@ -73,28 +86,25 @@ public final class main extends JavaPlugin {
      * Registers Commands to the (Minecraft) PluginManager
      */
     public void registerCommands(){
-        Bukkit.getPluginCommand("streamer").setExecutor(new StreamerCommand());
-        Bukkit.getPluginCommand("streamer").setTabCompleter(new StreamerCommand());
+        getCommand("streamer").setExecutor(new StreamerCommand());
 
-        Bukkit.getPluginCommand("worker").setExecutor(new WorkerCommand());
-        Bukkit.getPluginCommand("worker").setTabCompleter(new WorkerCommand());
+        getCommand("worker").setExecutor(new WorkerCommand());
 
-        Bukkit.getPluginCommand("whitelist").unregister(null);
-        Bukkit.getPluginCommand("whitelist").setExecutor(new WhitelistCommand());
-        Bukkit.getPluginCommand("whitelist").setTabCompleter(new WhitelistCommand());
+        getCommand("whitelist").unregister(null);
+        getCommand("whitelist").setExecutor(new WhitelistCommand());
 
-        Bukkit.getPluginCommand("warp").setExecutor(new WarpCommand());
-        Bukkit.getPluginCommand("warp").setTabCompleter(new WarpCommand());
+        getCommand("warp").setExecutor(new WarpCommand());
 
-        Bukkit.getPluginCommand("gamemode").unregister(null);
-        Bukkit.getPluginCommand("gamemode").setExecutor(new GameModeCommand());
-        Bukkit.getPluginCommand("gamemode").setTabCompleter(new GameModeCommand());
+        getCommand("gamemode").unregister(null);
+        getCommand("gamemode").setExecutor(new GameModeCommand());
 
-        Bukkit.getPluginCommand("city").setExecutor(new CityCommand());
-        Bukkit.getPluginCommand("city").setTabCompleter(new CityCommand());
+        getCommand("city").setExecutor(new CityCommand());
 
-        Bukkit.getPluginCommand("setup").setExecutor(new SetupCommand());
-        Bukkit.getPluginCommand("setup").setTabCompleter(new SetupCommand());
+        getCommand("setup").setExecutor(new SetupCommand());
+
+        getCommand("arena").setExecutor(new ArenaCommand());
+
+        getCommand("vanish").setExecutor(new VanishCommand());
 
     }
 

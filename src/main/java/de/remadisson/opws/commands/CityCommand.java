@@ -9,15 +9,12 @@ import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Sound;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
-import org.bukkit.command.TabCompleter;
+import org.bukkit.command.*;
 import org.bukkit.entity.Player;
 
 import java.util.*;
 
-public class CityCommand implements CommandExecutor, TabCompleter {
+public class CityCommand implements TabExecutor {
 
     private final String prefix = files.prefix;
     private final String permission = "opws.city";
@@ -25,24 +22,24 @@ public class CityCommand implements CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 
-        if(args.length == 0){
+        if (args.length == 0) {
             sendHelp(sender, 0);
         }
 
-        if(args.length == 1){
+        if (args.length == 1) {
             String firstArgument = args[0].toLowerCase();
             HashMap<String, Warp> cities = files.cityManager.getCities();
 
-            switch(firstArgument){
+            switch (firstArgument) {
                 case "add":
-                    if(!sender.hasPermission(permission)){
+                    if (!sender.hasPermission(permission)) {
                         sender.sendMessage(prefix + "§cYou do not have permission to execute this command!");
                         return false;
                     }
                     sender.sendMessage(prefix + "§f - §e/city add <Name>");
                     return true;
                 case "remove":
-                    if(!sender.hasPermission(permission)){
+                    if (!sender.hasPermission(permission)) {
                         sender.sendMessage(prefix + "§cYou do not have permission to execute this command!");
                         return false;
                     }
@@ -52,17 +49,17 @@ public class CityCommand implements CommandExecutor, TabCompleter {
                     sendCityList(sender, 0);
                     return true;
                 default:
-                    if(!cities.containsKey(firstArgument)){
+                    if (!cities.containsKey(firstArgument)) {
                         sendHelp(sender, 0);
                         return false;
                     }
 
-                    if(!(sender instanceof Player)){
+                    if (!(sender instanceof Player)) {
                         sender.sendMessage(prefix + "§cYou are the console, you cannot be ported! lulW");
                         return false;
                     }
 
-                    if(!cities.get(firstArgument).getAvailable() && !sender.hasPermission(permission)){
+                    if (!cities.get(firstArgument).getAvailable() && !sender.hasPermission(permission)) {
                         sender.sendMessage(prefix + "§cYou do not have permission to execute this command!");
                         return false;
                     }
@@ -70,61 +67,61 @@ public class CityCommand implements CommandExecutor, TabCompleter {
                     Warp city = cities.get(firstArgument);
                     sender.sendMessage(prefix + "§eDu wurdest zu §6" + city.getFirstUpperName() + "§e teleportiert!");
                     ((Player) sender).teleport(city.getLocation());
-                    ((Player) sender).playSound(((Player) sender).getLocation(), Sound.ENTITY_SPLASH_POTION_BREAK, 5 , 1);
+                    ((Player) sender).playSound(((Player) sender).getLocation(), Sound.ENTITY_SPLASH_POTION_BREAK, 5, 1);
 
                     return true;
             }
         }
 
-        if(args.length == 2){
+        if (args.length == 2) {
             String firstArgument = args[0].toLowerCase();
             String secondArgument = args[1].toLowerCase();
 
             CityManager cityManager = files.cityManager;
 
-            switch(firstArgument){
+            switch (firstArgument) {
                 case "add":
-                    if(!sender.hasPermission(permission)){
+                    if (!sender.hasPermission(permission)) {
                         sender.sendMessage(prefix + "§cYou do not have permission to execute this command!");
                         return false;
                     }
 
-                    if(cityManager.contains(secondArgument)){
+                    if (cityManager.contains(secondArgument)) {
                         sender.sendMessage(prefix + "§cThere is already a City named §l" + secondArgument + "§c!");
                         return false;
                     }
 
 
-                    if(!(sender instanceof Player)){
+                    if (!(sender instanceof Player)) {
                         sender.sendMessage(prefix + "§cYou cannot execute this command!");
                         return false;
                     }
 
-                    if(cityManager.isOwner(((Player)sender).getUniqueId())){
-                       sender.sendMessage(prefix + "§cYou can only have one city at once!");
-                       return false;
+                    if (cityManager.isOwner(((Player) sender).getUniqueId())) {
+                        sender.sendMessage(prefix + "§cYou can only have one city at once!");
+                        return false;
                     }
 
                     cityManager.addCity(new Warp(secondArgument, ((Player) sender).getLocation(), ((Player) sender).getUniqueId(), true));
                     sender.sendMessage(prefix + "§eYou have created the City §6" + secondArgument + "§e!");
                     return true;
                 case "remove":
-                    if(!sender.hasPermission(permission)){
+                    if (!sender.hasPermission(permission)) {
                         sender.sendMessage(prefix + "§cYou do not have permission to execute this command!");
                         return false;
                     }
 
-                    if(!cityManager.contains(secondArgument)){
+                    if (!cityManager.contains(secondArgument)) {
                         sender.sendMessage(prefix + "§cThere is no a City named §l" + secondArgument + "§c!");
                         return false;
                     }
 
-                    if(cityManager.getCity(secondArgument).getOwner().equals(MojangAPI.getPlayerProfile("remadisson").getUUID()) && !((Player)sender).getUniqueId().equals(MojangAPI.getPlayerProfile("remadisson").getUUID())){
+                    if (cityManager.getCity(secondArgument).getOwner().equals(MojangAPI.getPlayerProfile("remadisson").getUUID()) && !((Player) sender).getUniqueId().equals(MojangAPI.getPlayerProfile("remadisson").getUUID())) {
                         sender.sendMessage(prefix + "§cYou cannot remove a City, created by the System!");
                         return false;
                     }
 
-                    if((sender instanceof Player) && (!cityManager.getCity(secondArgument).getOwner().equals(((Player) sender).getUniqueId()) || !sender.isOp())){
+                    if ((sender instanceof Player) && (!cityManager.getCity(secondArgument).getOwner().equals(((Player) sender).getUniqueId()) || !sender.isOp())) {
                         sender.sendMessage(prefix + "§cThis is not your City!");
                         return false;
                     }
@@ -136,7 +133,7 @@ public class CityCommand implements CommandExecutor, TabCompleter {
                 case "list":
                     try {
                         sendCityList(sender, Integer.parseInt(secondArgument));
-                    }catch(NumberFormatException ex){
+                    } catch (NumberFormatException ex) {
                         sender.sendMessage(prefix + "§cDein Arugment entspricht keiner Zahl!");
                     }
                     return true;
@@ -149,7 +146,7 @@ public class CityCommand implements CommandExecutor, TabCompleter {
         return false;
     }
 
-    public void sendCityList(CommandSender sender, int site){
+    public void sendCityList(CommandSender sender, int site) {
         HashMap<String, Warp> cities = files.cityManager.getCities();
         List<String> keys = new ArrayList<>(cities.keySet());
 
@@ -172,10 +169,10 @@ public class CityCommand implements CommandExecutor, TabCompleter {
 
         for (int i = 0; i < (Math.min(cities.size() - (5 * site), 5)); i++) {
             Warp city = cities.get(keys.get((site * 5) + i));
-            if(!city.getAvailable() && !sender.hasPermission(permission)){
+            if (!city.getAvailable() && !sender.hasPermission(permission)) {
                 continue;
             }
-            if(sender instanceof Player) {
+            if (sender instanceof Player) {
                 TextComponent textComponent = new TextComponent(prefix + "§f - ");
                 TextComponent mainComponent = new TextComponent("§e/city " + city.getFirstUpperName());
                 mainComponent.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/city " + city.getFirstUpperName()));
@@ -195,7 +192,7 @@ public class CityCommand implements CommandExecutor, TabCompleter {
 
     public void sendHelp(CommandSender sender, int site) {
 
-        if(sender.hasPermission(permission)){
+        if (sender.hasPermission(permission)) {
             sender.sendMessage(prefix + "§eHelp for §6/city");
             sender.sendMessage(prefix + "§f - §e/city <Name>");
             sender.sendMessage(prefix + "§f - §e/city add <Name>");
@@ -214,24 +211,24 @@ public class CityCommand implements CommandExecutor, TabCompleter {
         ArrayList<String> indexListP = new ArrayList<>(Arrays.asList("add", "remove"));
         ArrayList<String> indexList = new ArrayList<>(Arrays.asList("list"));
 
-        if(args.length == 1){
-            if(sender.hasPermission(permission)){
-                for(String index : indexListP){
-                    if(index.startsWith(args[0].toLowerCase())){
+        if (args.length == 1) {
+            if (sender.hasPermission(permission)) {
+                for (String index : indexListP) {
+                    if (index.startsWith(args[0].toLowerCase())) {
                         flist.add(index);
                     }
                 }
             }
 
-            for(String index : indexList){
-                if(index.startsWith(args[0].toLowerCase())){
+            for (String index : indexList) {
+                if (index.startsWith(args[0].toLowerCase())) {
                     flist.add(index);
                 }
             }
-            if(args[0].length() > 0) {
+            if (args[0].length() > 0) {
                 for (Map.Entry<String, Warp> city : files.cityManager.getCities().entrySet()) {
 
-                    if(!city.getValue().getAvailable() && !sender.hasPermission(permission)){
+                    if (!city.getValue().getAvailable() && !sender.hasPermission(permission)) {
                         continue;
                     }
 
@@ -244,15 +241,15 @@ public class CityCommand implements CommandExecutor, TabCompleter {
         }
 
 
-        if(args.length == 2){
-            if(sender.hasPermission(permission)) {
+        if (args.length == 2) {
+            if (sender.hasPermission(permission)) {
                 if (args[0].toLowerCase().equals("remove")) {
                     for (String city : files.cityManager.getCities().keySet()) {
                         if (city.toLowerCase().startsWith(args[1].toLowerCase())) flist.add(city);
                     }
                 } else if (args[0].toLowerCase().equals("list")) {
                     int maxsites = (int) Math.ceil(files.cityManager.getCities().size() / 6);
-                    for(int i = 1; i <= maxsites; i++){
+                    for (int i = 1; i <= maxsites; i++) {
                         flist.add(String.valueOf(i));
                     }
                 }

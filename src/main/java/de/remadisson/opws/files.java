@@ -2,11 +2,14 @@ package de.remadisson.opws;
 
 import de.remadisson.opws.api.FileAPI;
 import de.remadisson.opws.api.MojangAPI;
+import de.remadisson.opws.arena.ArenaFile;
 import de.remadisson.opws.arena.ArenaManager;
 import de.remadisson.opws.enums.ServerState;
+import de.remadisson.opws.enums.TeamEnum;
 import de.remadisson.opws.enums.Warp;
 import de.remadisson.opws.enums.WorkerState;
 import de.remadisson.opws.manager.*;
+import net.md_5.bungee.api.ChatColor;
 import net.minecraft.server.v1_16_R2.EnumChatFormat;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -48,23 +51,33 @@ public class files {
 
     public static WorkerState workerState = WorkerState.valueOf(config.getDefault("workerState", "maintenance").toString().toUpperCase());
     public static boolean maintenance = Boolean.parseBoolean(config.getDefault("maintenance", false).toString());
+    public static boolean allowWarp = Boolean.parseBoolean(config.getDefault("allowWarp", true).toString());
 
     public static void loadFiles(){
         streamerManager.load();
         warpManager.load();
         cityManager.load();
-        ArenaManager.load();
+        ArenaFile.load();
     }
 
     public static void disableFiles(){
         streamerManager.save();
         warpManager.save();
         cityManager.save();
-        ArenaManager.save();
+        ArenaFile.save();
 
         config.set("maintenance", maintenance);
         config.set("workerState", workerState.name());
+        config.set("allowWarp", allowWarp);
         config.save();
+    }
+
+    public static void despawnHolograms(){
+        arenaManager.forEach((key, value) -> {
+            for (Hologram hologram : value.getHolograms().values()) {
+                hologram.remove();
+            }
+        });
     }
 
     public static final String adminprefix = "§4§lADMIN §4";
@@ -78,6 +91,11 @@ public class files {
 
     public static String getPrefix(UUID uuid){
         OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
+
+        if(ArenaManager.containsPlayer(uuid)){
+            TeamEnum team = ArenaManager.getArenaPlayer(uuid).getTeam();
+            return team.getColor() + "§l" + team.getName().toUpperCase() + " ";
+        }
 
         if(player.isOp() && (!player.getUniqueId().equals(MaikEagle) || !streamerManager.getStreamer().contains(uuid))){
             if(uuid.equals(MaikEagle)){
@@ -102,6 +120,11 @@ public class files {
     public static EnumChatFormat getColor(UUID uuid){
         OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
 
+        if(ArenaManager.containsPlayer(uuid)){
+            TeamEnum team = ArenaManager.getArenaPlayer(uuid).getTeam();
+            return EnumChatFormat.valueOf(team.getColor().name());
+        }
+
         if(player.isOp() && (!player.getUniqueId().equals(MaikEagle) || !streamerManager.getStreamer().contains(uuid))){
             return EnumChatFormat.DARK_RED;
         } else if(streamerManager.getWorker().contains(uuid)){
@@ -121,6 +144,21 @@ public class files {
     public static Integer getLevel(UUID uuid){
         OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
 
+        if(ArenaManager.containsPlayer(uuid)){
+            TeamEnum team = ArenaManager.getArenaPlayer(uuid).getTeam();
+
+            if(team == TeamEnum.RED){
+             return 60;
+            }
+
+            if(team == TeamEnum.BLUE){
+                return 61;
+            }
+
+            if(team == TeamEnum.SPECTATOR){
+                return 62;
+            }
+        }
         if(player.isOp() && (!player.getUniqueId().equals(MaikEagle) || !streamerManager.getStreamer().contains(uuid))){
             return 0;
         } else if(streamerManager.getWorker().contains(uuid)){
@@ -133,31 +171,40 @@ public class files {
             if(uuid.equals(MaikEagle)){
                 return 18;
             }
-
             return 20;
         } else {
 
             if(uuid.equals(MaikEagle)){
                 return 28;
             }
-
             return 30;
         }
     }
 
     public static String getChatFormat(UUID uuid){
         Player p = Bukkit.getPlayer(uuid);
+
         assert p != null;
+
+        if(ArenaManager.containsPlayer(uuid)) {
+            ArenaManager arenaManager = ArenaManager.getPlayerArena(uuid);
+            TeamEnum team = ArenaManager.getArenaPlayer(uuid).getTeam();
+            return ChatColor.AQUA + arenaManager.getName() + " §8| " + team.getColor() + ChatColor.BOLD + team.getName().toUpperCase() + "§r " + team.getColor() + p.getName();
+        }
+
         return getPrefix(uuid) + p.getName();
     }
 
     public static void loadPermissions(Player player){
         UUID uuid = player.getUniqueId();
 
-        if(permissionAttachment.containsKey(uuid)) {
-            player.removeAttachment(permissionAttachment.get(uuid));
-            files.permissionAttachment.remove(uuid);
-        }
+
+        try {
+            if (permissionAttachment.containsKey(uuid)) {
+                player.removeAttachment(permissionAttachment.get(uuid));
+                files.permissionAttachment.remove(uuid);
+            }
+        } catch(IllegalArgumentException ignored){}
 
         PermissionAttachment attachment = player.addAttachment(main.getInstance());
         ArrayList<String> permissions = attachment.getPermissible().getEffectivePermissions().stream().map(PermissionAttachmentInfo::getPermission).collect(Collectors.toCollection(ArrayList::new));

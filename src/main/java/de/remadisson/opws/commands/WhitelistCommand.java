@@ -4,16 +4,12 @@ import de.remadisson.opws.api.MojangAPI;
 import de.remadisson.opws.files;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
-import org.bukkit.command.TabCompleter;
+import org.bukkit.command.*;
 import org.bukkit.entity.Player;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
-public class WhitelistCommand implements CommandExecutor, TabCompleter {
+public class WhitelistCommand implements TabExecutor {
 
     /*
         Command: Whitelist
@@ -22,7 +18,6 @@ public class WhitelistCommand implements CommandExecutor, TabCompleter {
      */
 
     private final String prefix = "§eWhitelist " + files.prefix;
-    private final String debug = files.debug;
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
@@ -40,6 +35,8 @@ public class WhitelistCommand implements CommandExecutor, TabCompleter {
             final String firstRaw = args[0].toLowerCase();
             switch (firstRaw) {
                 case "on":
+                case "true":
+                case "1":
 
                     if (Bukkit.hasWhitelist()) {
                         sender.sendMessage(prefix + "§cWhitelist is already §a§lon§c.");
@@ -52,6 +49,8 @@ public class WhitelistCommand implements CommandExecutor, TabCompleter {
                     return true;
 
                 case "off":
+                case "false":
+                case "0":
 
                     if (!Bukkit.hasWhitelist()) {
                         sender.sendMessage(prefix + "§cWhitelist is already §loff§c.");
@@ -87,7 +86,6 @@ public class WhitelistCommand implements CommandExecutor, TabCompleter {
                         }
 
                         String whitelistedPlayers = String.join("§f, §a", whitelistedNames);
-
                         sender.sendMessage(prefix + "§a" + whitelistedPlayers);
                     });
 
@@ -138,6 +136,7 @@ public class WhitelistCommand implements CommandExecutor, TabCompleter {
 
                     return true;
                 }
+
                 case "remove": {
                     Player player = Bukkit.getPlayer(secondRaw);
                     UUID uuid;
@@ -166,6 +165,7 @@ public class WhitelistCommand implements CommandExecutor, TabCompleter {
 
                     return true;
                 }
+
                 default:
                     sendHelp(sender, 0);
                     return true;

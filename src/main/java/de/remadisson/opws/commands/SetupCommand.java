@@ -22,6 +22,7 @@ public class SetupCommand implements CommandExecutor, TabCompleter {
     private String[] permission = {"opws.setup"};
 
     public static HashMap<Player, ArenaSetup> ArenaSetup = new HashMap<>();
+    public static ArrayList<Player> ArenaTest = new ArrayList<>();
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
@@ -221,7 +222,7 @@ public class SetupCommand implements CommandExecutor, TabCompleter {
                             ArenaManager arena = files.arenaManager.get(thirdArgument);
 
                             sender.sendMessage(prefix + "§eTesting initiated!");
-
+                                ArenaTest.add(((Player) sender));
                                files.pool.execute(() -> {
 
                                    try {
@@ -262,6 +263,7 @@ public class SetupCommand implements CommandExecutor, TabCompleter {
 
                                    ((Player) sender).playSound(((Player) sender).getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 2, 1);
                                 sender.sendMessage(prefix + "§eDone with testing locations, in the future teams will be tested too!");
+                                   ArenaTest.remove(sender);
                             });
                                 return true;
                             case "teleport":

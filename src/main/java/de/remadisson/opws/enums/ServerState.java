@@ -5,3 +5,4 @@ public enum ServerState {
     OPEN, CLOSED, ERROR, STARTUP;
 
 }
+

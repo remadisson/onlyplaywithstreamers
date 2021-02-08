@@ -1,29 +1,34 @@
 package de.remadisson.opws.arena;
 
+import com.destroystokyo.paper.Title;
+import de.remadisson.opws.enums.ArenaState;
+import de.remadisson.opws.enums.CountdownEnum;
 import de.remadisson.opws.enums.TeamEnum;
+import de.remadisson.opws.events.ArenaPlayerDieEvent;
+import de.remadisson.opws.events.ArenaPlayerLeaveEvent;
+import de.remadisson.opws.events.PlayerChangePermissionEvent;
 import de.remadisson.opws.files;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.configuration.ConfigurationSection;
+import de.remadisson.opws.main;
+import de.remadisson.opws.manager.Hologram;
+import de.remadisson.opws.manager.StreamerManager;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.TextComponent;
+import org.bukkit.*;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class ArenaManager {
 
-    private final HashMap<ArenaPlayer, Inventory> waitingPlayers = new HashMap<>();
-
-    // List of external Viewers
-    private final ArrayList<Player> viewerList = new ArrayList<>();
-
-    // List of dead Players that are spectating
-    private ArrayList<Player> deadPlayers = new ArrayList<>();
+    //public final HashMap<UUID, ArenaPlayer> players = new HashMap<>();
 
     private String name;
-
     private final Location viewerSpawn;
     private final Location deadPlayerSpawn;
     private final Location exitSpawn;
@@ -31,12 +36,32 @@ public class ArenaManager {
     private final Location JoinTeam2;
     private final Location SpawnTeam1;
     private final Location SpawnTeam2;
+    private final Location center;
 
-    private HashMap<TeamEnum, TeamManager> teamMap;
+    private ArenaState arenaState = ArenaState.LOBBY;
+    private int roundsPlayed = 0;
+    private final int maximalPlayingRounds = 3;
+
+    private final int maximalTeamSize = 3;
+
+    private HashMap<TeamEnum, Hologram> holograms = new HashMap<>();
+    private HashMap<TeamEnum, TeamManager> teamMap = new HashMap<>();
+    private ArenaScoreboard arenaScoreboard;
+    private int scheduler = 0;
+    private int lobbyMessage = 0;
+    private int figthingPlayers = 0;
+
+    private Material[] prizes = new Material[]{Material.DIAMOND, Material.NETHERITE_INGOT};
+
+    private HashMap<CountdownEnum, Integer> countDownInstance = new HashMap<>();
+    private HashMap<CountdownEnum, Integer> temp_countDownInstance;
+    private CountdownEnum activeCountdown;
+    private ArrayList<String> needToTeleport = new ArrayList<>();
+    private HashMap<String, ItemStack> playerPrizeMap = new HashMap<>();
 
     private boolean inited = false;
 
-    public ArenaManager(String name, Location viewerSpawn, Location deadPlayerSpawn, Location exitSpawn, Location JoinTeam1, Location JoinTeam2, Location SpawnTeam1, Location SpawnTeam2) {
+    public ArenaManager(String name, Location viewerSpawn, Location deadPlayerSpawn, Location exitSpawn, Location JoinTeam1, Location JoinTeam2, Location SpawnTeam1, Location SpawnTeam2, Location center) {
         this.name = name;
         this.viewerSpawn = viewerSpawn;
         this.deadPlayerSpawn = deadPlayerSpawn;
@@ -45,19 +70,70 @@ public class ArenaManager {
         this.JoinTeam2 = JoinTeam2;
         this.SpawnTeam1 = SpawnTeam1;
         this.SpawnTeam2 = SpawnTeam2;
+        this.center = center;
+
+        holograms.put(TeamEnum.RED, new Hologram(new String[]{"§e" + getName(), TeamEnum.RED.getColor() + "Team " + TeamEnum.RED.getName(), "§e" + getPlayerTeamRed().size() + "§7/" + "§6" + getMaxTeamSize(), (arenaState == ArenaState.LOBBY ? "§bBeitreten" : "§cLäuft")}, this.JoinTeam1));
+        holograms.put(TeamEnum.BLUE, new Hologram(new String[]{"§e" + getName(), TeamEnum.BLUE.getColor() + "Team " + TeamEnum.BLUE.getName(), "§e" + getPlayerTeamBlue().size() + "§7/" + "§6" + getMaxTeamSize(), (arenaState == ArenaState.LOBBY ? "§bBeitreten" : "§cLäuft")}, this.JoinTeam2));
+
+        arenaScoreboard = new ArenaScoreboard(this);
+        teamMap.put(TeamEnum.RED, new TeamManager(TeamEnum.RED));
+        teamMap.put(TeamEnum.BLUE, new TeamManager(TeamEnum.BLUE));
+        teamMap.put(TeamEnum.SPECTATOR, new TeamManager(TeamEnum.SPECTATOR));
+
+        countDownInstance.put(CountdownEnum.LOBBY, 13);
+        countDownInstance.put(CountdownEnum.PREFIGHT, 10);
+        countDownInstance.put(CountdownEnum.FIGHT, 900);
+        countDownInstance.put(CountdownEnum.AFTERFIGHT, 5);
+        countDownInstance.put(CountdownEnum.WIN, 13);
+
+        temp_countDownInstance = new HashMap<>(countDownInstance);
+    }
+
+    public void runLobby() {
+        this.inited = true;
+        setActiveCountdown(CountdownEnum.LOBBY);
     }
 
     /**
      * This Methods Ports the Players in their Teams onto the SpawnPositions.
      *
-     * @param teamMap
      * @return
      */
-    public ArenaManager init(HashMap<TeamEnum, TeamManager> teamMap) {
-        this.teamMap = teamMap;
+    public void initiateFightSequence() {
+        if (!inited) return;
+        arenaState = ArenaState.FIGHT;
 
-        inited = true;
-        return this;
+        Bukkit.getScheduler().scheduleSyncDelayedTask(main.getInstance(), () -> {
+            for (Player player : getFightersList()) {
+                player.setGameMode(GameMode.SURVIVAL);
+            }
+
+            for (Map.Entry<TeamEnum, Hologram> hologram : holograms.entrySet()) {
+                if (hologram.getKey() == TeamEnum.RED) {
+                    hologram.getValue().updateLine(0, "§e" + getName());
+                    hologram.getValue().updateLine(1, hologram.getKey().getTeamString());
+                    hologram.getValue().updateLine(2, "§e" + getPlayerTeamRed().size() + "§7/" + "§6" + getMaxTeamSize());
+                    hologram.getValue().updateLine(3, (arenaState == ArenaState.LOBBY ? (getPlayerTeamRed().size() > getMaxTeamSize() ? "§cVoll" : "§bBeitreten") : "§cLäuft"));
+                }
+                if (hologram.getKey() == TeamEnum.BLUE) {
+                    hologram.getValue().updateLine(0, "§e" + getName());
+                    hologram.getValue().updateLine(1, hologram.getKey().getTeamString());
+                    hologram.getValue().updateLine(2, "§e" + getPlayerTeamBlue().size() + "§7/" + "§6" + getMaxTeamSize());
+                    hologram.getValue().updateLine(3, (arenaState == ArenaState.LOBBY ? (getPlayerTeamBlue().size() > getMaxTeamSize() ? "§cVoll" : "§bBeitreten") : "§cLäuft"));
+                }
+            }
+        }, 0);
+
+        sendAdMessage();
+        figthingPlayers = getFightersList().size();
+        prefight();
+    }
+
+    public void prefight() {
+        if (!inited) return;
+        reset();
+        roundsPlayed++;
+        setActiveCountdown(CountdownEnum.PREFIGHT);
     }
 
     /**
@@ -65,59 +141,495 @@ public class ArenaManager {
      *
      * @return
      */
-    public boolean fight() {
-        if (!inited) return false;
-
-        return true;
+    public void fight() {
+        if (!inited) return;
+        sendArenaMessage("§eDer Kampf beginnt jetzt!");
+        setActiveCountdown(CountdownEnum.FIGHT);
     }
 
+    public void afterFight() {
+        if (!inited) return;
+        setActiveCountdown(CountdownEnum.AFTERFIGHT);
+        for (ArenaPlayer fighter : getArenaFightersList()) {
+            if (!fighter.isDead()) {
+                Player winner = fighter.getPlayer();
+                winner.getInventory().clear();
+                winner.setHealth(20);
+                winner.setFoodLevel(20);
+            }
+        }
 
-    /**
-     * This Method resets all Players to their SpawnPositions and and shows the starts the Fight Sequence again.
-     *
-     * @return
-     */
-    public boolean reset() {
-
-        return true;
     }
 
+    public void win(TeamEnum winner) {
+        if (!inited) return;
+        setActiveCountdown(CountdownEnum.WIN);
+        sendArenaMessage(winner.getTeamString() + " §egewinnt diese Arena!");
+        loadPlayerPrizes(winner);
+
+        Bukkit.getScheduler().scheduleSyncDelayedTask(main.getInstance(), () -> {
+            for (ArenaPlayer arenaPlayer : getArenaFightersList()) {
+                if (arenaPlayer.isDead()) {
+                    arenaPlayer.setDead(false);
+                }
+                arenaPlayer.getPlayer().teleport(getCenter());
+                arenaPlayer.getPlayer().getInventory().clear();
+                arenaPlayer.getPlayer().setHealth(20);
+                arenaPlayer.getPlayer().setFoodLevel(20);
+                arenaPlayer.getPlayer().playSound(arenaPlayer.getPlayer().getLocation(), Sound.ENTITY_FIREWORK_ROCKET_LAUNCH, 3, 1);
+            }
+        }, 0);
+
+    }
 
     /**
      * If a Team has the required Wins to Win the whole Arena-Fight, then this Sequence will be triggert
      *
      * @return
      */
-    public boolean finish() {
+    public void finish() {
+        for (TeamManager team : teamMap.values()) {
+            if (team.getTeamEnum() == TeamEnum.SPECTATOR) continue;
+            team.setLoses(0);
+            team.setWins(0);
+            for (ArenaPlayer arenaPlayer : team.getArenaPlayerList()) {
+                removePlayer(arenaPlayer.getPlayer());
+            }
+        }
 
+        figthingPlayers = 0;
+        roundsPlayed = 0;
         inited = false;
-        this.teamMap = null;
+        arenaState = ArenaState.LOBBY;
 
-        return true;
+        Bukkit.getScheduler().scheduleSyncDelayedTask(main.getInstance(), () -> {
+            for (Map.Entry<TeamEnum, Hologram> hologram : holograms.entrySet()) {
+                if (hologram.getKey() == TeamEnum.RED) {
+                    hologram.getValue().updateLine(0, "§e" + getName());
+                    hologram.getValue().updateLine(1, hologram.getKey().getTeamString());
+                    hologram.getValue().updateLine(2, "§e" + getPlayerTeamRed().size() + "§7/" + "§6" + getMaxTeamSize());
+                    hologram.getValue().updateLine(3, (arenaState == ArenaState.LOBBY ? (getPlayerTeamRed().size() > getMaxTeamSize() ? "§cVoll" : "§bBeitreten") : "§cLäuft"));
+                }
+                if (hologram.getKey() == TeamEnum.BLUE) {
+                    hologram.getValue().updateLine(0, "§e" + getName());
+                    hologram.getValue().updateLine(1, hologram.getKey().getTeamString());
+                    hologram.getValue().updateLine(2, "§e" + getPlayerTeamBlue().size() + "§7/" + "§6" + getMaxTeamSize());
+                    hologram.getValue().updateLine(3, (arenaState == ArenaState.LOBBY ? (getPlayerTeamBlue().size() > getMaxTeamSize() ? "§cVoll" : "§bBeitreten") : "§cLäuft"));
+                }
+            }
+        }, 0);
+    }
+
+    /**
+     * This Method resets all Players to their SpawnPositions and shows the starts the Fight Sequence again.
+     *
+     * @return
+     */
+    public void reset() {
+
+        if (roundsPlayed > 0) {
+            for (Player player : getFightersList()) {
+                player.sendTitle(Title.builder().title(TeamEnum.RED.getColor() + "" + getTeamRed().getWins() + " §8| " + TeamEnum.BLUE.getColor() + "" + getTeamBlue().getWins()).subtitle("§7Zwischenstand nach §bRunde " + roundsPlayed).fadeIn(20).fadeOut(20).stay(20 * 3).build());
+            }
+        }
+
+        for (Player player : getFightersList()) {
+            ArenaPlayer arenaPlayer = getArenaPlayer(player.getUniqueId());
+            assert arenaPlayer != null;
+            if (arenaPlayer.isDead()) {
+                arenaPlayer.setDead(false);
+            }
+            player.setFoodLevel(20);
+            player.setHealth(20);
+            player.getInventory().clear();
+            player.setExp(0);
+            player.setLevel(0);
+            ArenaKits.standardKit(player, arenaPlayer.getTeam());
+
+            Bukkit.getScheduler().scheduleSyncDelayedTask(main.getInstance(), () -> {
+                player.teleport(getSpawnLocations().get(arenaPlayer.getTeam()));
+            }, 0);
+        }
+
     }
 
 
+    public ArenaManager addPlayer(Player p, TeamEnum team) {
 
-    public void removeArena(){
+        p.teleport(getViewerSpawn());
+        p.setHealth(20);
+        p.setFoodLevel(20);
+        p.setGameMode(GameMode.ADVENTURE);
+
+        ArenaPlayer arenaPlayer = new ArenaPlayer(p.getUniqueId(), p.getInventory().getContents(), p.getLevel(), team);
+        teamMap.get(arenaPlayer.getTeam()).addMember(arenaPlayer);
+
+        arenaScoreboard.setScoreboard(p);
+
+        Bukkit.getPluginManager().callEvent(new PlayerChangePermissionEvent());
+
+        initScheduler();
+
+        sendFightersMessage(arenaPlayer.getTeam().getColor() + p.getName() + " §7hat die Arena §abetreten!");
+
+        for (Map.Entry<TeamEnum, Hologram> hologram : holograms.entrySet()) {
+            if (hologram.getKey() == TeamEnum.RED) {
+                hologram.getValue().updateLine(0, "§e" + getName());
+                hologram.getValue().updateLine(1, hologram.getKey().getTeamString());
+                hologram.getValue().updateLine(2, "§e" + getPlayerTeamRed().size() + "§7/" + "§6" + getMaxTeamSize());
+                hologram.getValue().updateLine(3, (arenaState == ArenaState.LOBBY ? (getPlayerTeamRed().size() > getMaxTeamSize() ? "§cVoll" : "§bBeitreten") : "§cLäuft"));
+            }
+            if (hologram.getKey() == TeamEnum.BLUE) {
+                hologram.getValue().updateLine(0, "§e" + getName());
+                hologram.getValue().updateLine(1, hologram.getKey().getTeamString());
+                hologram.getValue().updateLine(2, "§e" + getPlayerTeamBlue().size() + "§7/" + "§6" + getMaxTeamSize());
+                hologram.getValue().updateLine(3, (arenaState == ArenaState.LOBBY ? (getPlayerTeamBlue().size() > getMaxTeamSize() ? "§cVoll" : "§bBeitreten") : "§cLäuft"));
+            }
+        }
+        return this;
+    }
+
+    public ArenaManager removePlayer(Player p) {
+        ArenaPlayer arenaPlayer = getArenaPlayer(p);
+
+        teamMap.get(arenaPlayer.getTeam()).removeMember(p.getUniqueId());
+        sendFightersMessage(arenaPlayer.getTeam().getColor() + p.getName() + " §7hat die Arena §4verlassen!");
+        for (int slot = 0; slot < arenaPlayer.getInventory().length; slot++) {
+            p.getInventory().setItem(slot, arenaPlayer.getInventory()[slot]);
+        }
+
+        p.giveExpLevels(arenaPlayer.getXP());
+
+        Bukkit.getScheduler().scheduleSyncDelayedTask(main.getInstance(), () -> {
+            Bukkit.getPluginManager().callEvent(new PlayerChangePermissionEvent());
+            Bukkit.getPluginManager().callEvent(new ArenaPlayerLeaveEvent(this, arenaPlayer, p));
+
+            for (Map.Entry<TeamEnum, Hologram> hologram : holograms.entrySet()) {
+                if (hologram.getKey() == TeamEnum.RED) {
+                    hologram.getValue().updateLine(0, "§e" + getName());
+                    hologram.getValue().updateLine(1, hologram.getKey().getTeamString());
+                    hologram.getValue().updateLine(2, "§e" + getPlayerTeamRed().size() + "§7/" + "§6" + getMaxTeamSize());
+                    hologram.getValue().updateLine(3, (arenaState == ArenaState.LOBBY ? (getPlayerTeamRed().size() > getMaxTeamSize() ? "§cVoll" : "§bBeitreten") : "§cLäuft"));
+                }
+                if (hologram.getKey() == TeamEnum.BLUE) {
+                    hologram.getValue().updateLine(0, "§e" + getName());
+                    hologram.getValue().updateLine(1, hologram.getKey().getTeamString());
+                    hologram.getValue().updateLine(2, "§e" + getPlayerTeamBlue().size() + "§7/" + "§6" + getMaxTeamSize());
+                    hologram.getValue().updateLine(3, (arenaState == ArenaState.LOBBY ? (getPlayerTeamBlue().size() > getMaxTeamSize() ? "§cVoll" : "§bBeitreten") : "§cLäuft"));
+                }
+            }
+            p.teleport(exitSpawn);
+        }, 0);
+
+        arenaScoreboard.removeScoreboard(p);
+
+        if (getFightersList().size() < 1) {
+            deInitScheduler();
+        }
+
+        return this;
+    }
+
+    public ArenaManager addViewer(Player p, TeamEnum team) {
+        p.setHealth(20);
+        p.setFoodLevel(20);
+        p.setGameMode(GameMode.ADVENTURE);
+
+        ArenaPlayer arenaPlayer = new ArenaPlayer(p.getUniqueId(), p.getInventory().getContents(), p.getLevel(), team);
+        arenaPlayer.setJoinPoint(p.getLocation());
+        p.teleport(getViewerSpawn());
+        teamMap.get(arenaPlayer.getTeam()).addMember(arenaPlayer);
+        arenaScoreboard.setScoreboard(p);
+        p.getInventory().clear();
+        p.setLevel(0);
+        p.setExp(0);
+
+        Bukkit.getPluginManager().callEvent(new PlayerChangePermissionEvent());
+
+        return this;
+    }
+
+    public ArenaManager removeViewer(Player p) {
+        ArenaPlayer arenaPlayer = getArenaPlayer(p);
+
+        teamMap.get(arenaPlayer.getTeam()).removeMember(p.getUniqueId());
+        for (int slot = 0; slot < arenaPlayer.getInventory().length; slot++) {
+            p.getInventory().setItem(slot, arenaPlayer.getInventory()[slot]);
+        }
+
+        arenaScoreboard.removeScoreboard(p);
+        Bukkit.getScheduler().scheduleSyncDelayedTask(main.getInstance(), () -> {
+            assert arenaPlayer.getJoinPoint() != null;
+            p.teleport(arenaPlayer.getJoinPoint());
+            p.giveExpLevels(arenaPlayer.getXP());
+            Bukkit.getPluginManager().callEvent(new PlayerChangePermissionEvent());
+        }, 0);
+
+        return this;
+    }
+
+    public ArenaPlayer getPlayer(UUID uuid) {
+        return getArenaPlayers().get(uuid);
+    }
+
+    public ArenaPlayer getPlayer(Player p) {
+        return getArenaPlayers().get(p.getUniqueId());
+    }
+
+
+    public boolean containsUUID(UUID uuid) {
+        return getArenaPlayers().containsKey(uuid);
+    }
+
+    public void removeArena() {
         files.arenaManager.remove(name);
+
+        for (Hologram hologram : getHolograms().values()) {
+            hologram.remove();
+        }
+
         files.arenaFile.getSection("arena").set(name, null);
+
+        Bukkit.getPluginManager().callEvent(new PlayerChangePermissionEvent());
     }
 
     public HashMap<TeamEnum, TeamManager> getTeamList() {
         return teamMap;
     }
 
-    public ArrayList<Player> getPlayerList(){
+    public ArrayList<Player> getFightersList() {
         ArrayList<Player> playerList = new ArrayList<>();
+        try {
 
-        playerList.addAll(getTeamList().get(TeamEnum.BLUE).getPlayerList());
-        playerList.addAll(getTeamList().get(TeamEnum.RED).getPlayerList());
+            playerList.addAll(getTeamList().get(TeamEnum.BLUE).getPlayerList());
+            playerList.addAll(getTeamList().get(TeamEnum.RED).getPlayerList());
 
+        } catch (NullPointerException ex) {
+            return playerList;
+        }
         return playerList;
     }
 
+    public ArrayList<ArenaPlayer> getArenaFightersList() {
+        ArrayList<ArenaPlayer> playerList = new ArrayList<>();
+        try {
+
+            playerList.addAll(getTeamList().get(TeamEnum.BLUE).getArenaPlayerList());
+            playerList.addAll(getTeamList().get(TeamEnum.RED).getArenaPlayerList());
+
+        } catch (NullPointerException ex) {
+            return playerList;
+        }
+        return playerList;
+    }
+
+    public ArrayList<Player> getViewer() {
+        ArrayList<Player> arenaPlayers = new ArrayList<>();
+        try {
+            arenaPlayers.addAll(getTeamList().get(TeamEnum.SPECTATOR).getPlayerList());
+        } catch (NullPointerException ex) {
+            return arenaPlayers;
+        }
+        return arenaPlayers;
+    }
+
+    public ArrayList<ArenaPlayer> getArenaViewer() {
+        ArrayList<ArenaPlayer> arenaPlayers = new ArrayList<>();
+        try {
+            arenaPlayers.addAll(getTeamList().get(TeamEnum.SPECTATOR).getArenaPlayerList());
+        } catch (NullPointerException ex) {
+            return arenaPlayers;
+        }
+        return arenaPlayers;
+    }
+
+    public TeamManager getTeamRed() {
+        return teamMap.get(TeamEnum.RED);
+    }
+
+    public ArrayList<Player> getPlayerTeamRed() {
+        ArrayList<Player> arenaPlayers = new ArrayList<>();
+        try {
+            arenaPlayers.addAll(getTeamList().get(TeamEnum.RED).getPlayerList());
+        } catch (NullPointerException ex) {
+            return arenaPlayers;
+        }
+        return arenaPlayers;
+    }
+
+    public ArrayList<ArenaPlayer> getArenaTeamRed() {
+        ArrayList<ArenaPlayer> arenaPlayers = new ArrayList<>();
+        try {
+            arenaPlayers.addAll(getTeamList().get(TeamEnum.RED).getArenaPlayerList());
+        } catch (NullPointerException ex) {
+            return arenaPlayers;
+        }
+        return arenaPlayers;
+    }
+
+    public TeamManager getTeamBlue() {
+        return teamMap.get(TeamEnum.BLUE);
+    }
+
+    public ArrayList<Player> getPlayerTeamBlue() {
+        ArrayList<Player> arenaPlayers = new ArrayList<>();
+        try {
+            arenaPlayers.addAll(getTeamList().get(TeamEnum.BLUE).getPlayerList());
+        } catch (NullPointerException ex) {
+            return arenaPlayers;
+        }
+        return arenaPlayers;
+    }
+
+    public ArrayList<ArenaPlayer> getArenaTeamBlue() {
+        ArrayList<ArenaPlayer> arenaPlayers = new ArrayList<>();
+        try {
+            arenaPlayers.addAll(getTeamList().get(TeamEnum.BLUE).getArenaPlayerList());
+        } catch (NullPointerException ex) {
+            return arenaPlayers;
+        }
+        return arenaPlayers;
+    }
+
+    public Player getLeadingPlayer(ArrayList<Player> team){
+        Player leadingPlayer = null;
+        StreamerManager streamerManager = files.streamerManager;
+        for (Player player : team) {
+            if(leadingPlayer != null){
+                if(streamerManager.getStreamer().contains(player)){
+                    leadingPlayer = player;
+                    continue;
+                }
+
+                if(streamerManager.getStreamer().contains(leadingPlayer)){
+                    continue;
+                }
+
+                if(player.isOp() && leadingPlayer.isOp()){
+                    continue;
+                }
+
+                if(player.isOp() && !leadingPlayer.isOp()){
+                    leadingPlayer = player;
+                    continue;
+                }
+
+                if(!player.isOp() && leadingPlayer.isOp()){
+                    continue;
+                }
+
+                if(streamerManager.getWorker().contains(leadingPlayer)){
+                    continue;
+                }
+
+                if(streamerManager.getWorker().contains(player)){
+                    leadingPlayer = player;
+                    continue;
+                }
+
+                leadingPlayer = team.stream().sorted(Comparator.comparing(Player::getName)).collect(Collectors.toList()).get(0);
+
+            } else {
+                leadingPlayer = player;
+            }
+        }
+
+        return leadingPlayer;
+    }
+
+    public void sendAdMessage(){
+        TeamManager teamRed = getTeamRed();
+        TeamManager teamBlue = getTeamBlue();
+        String message = files.prefix + "§7In der Arena §b" + name + " §7kämpfen das Team von " + teamRed.getTeamEnum().getColor() + getLeadingPlayer(teamRed.getPlayerList()).getName() + " §7gegen das Team von " + teamBlue.getTeamEnum().getColor() + getLeadingPlayer(teamBlue.getPlayerList()).getName() + "!";
+
+        TextComponent textComponent = new TextComponent(files.prefix + "§7Um zuzuschauen §8[");
+        TextComponent mainComponent = new TextComponent("§bKlick hier");
+        TextComponent endComponent = new TextComponent("§8]");
+        mainComponent.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/arena view " + name));
+        mainComponent.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(teamRed.getTeamEnum().getColor() + getLeadingPlayer(teamRed.getPlayerList()).getName() + " §7vs " + teamBlue.getTeamEnum().getColor() + getLeadingPlayer(teamBlue.getPlayerList()).getName()).create()));
+        textComponent.addExtra(mainComponent);
+        textComponent.addExtra(endComponent);
+
+        for(Player online : Bukkit.getOnlinePlayers()){
+            if(!getPlayers().contains(online)){
+                online.sendMessage(message);
+                online.spigot().sendMessage(textComponent);
+            }
+        }
+    }
+
+    public void sendArenaMessage(String message) {
+        String fullMesssage = "§8| " + ChatColor.YELLOW + getName() + " " + files.prefix + message;
+        for (TeamManager team : teamMap.values()) {
+            for (Player player : team.getPlayerList()) {
+                player.sendMessage(fullMesssage);
+            }
+        }
+    }
+
+    public void sendFightersMessage(String message) {
+        String fullMesssage = "§8| " + ChatColor.YELLOW + getName() + " " + files.prefix + message;
+        for (Player player : getFightersList()) {
+            if (player != null) {
+                player.sendMessage(fullMesssage);
+            }
+        }
+    }
+
+    public ArrayList<ArenaPlayer> getReadyPlayers() {
+        ArrayList<ArenaPlayer> isReady = new ArrayList<>();
+
+        for (ArenaPlayer arenaPlayer : getArenaFightersList()) {
+            if (arenaPlayer.isReady()) isReady.add(arenaPlayer);
+        }
+
+        return isReady;
+    }
+
+    public ArrayList<Player> getPlayers() {
+        ArrayList<Player> player = new ArrayList<>();
+
+        if (getPlayerTeamRed().size() > 0) {
+            player.addAll(getPlayerTeamRed());
+        }
+        if (getPlayerTeamBlue().size() > 0) {
+            player.addAll(getPlayerTeamBlue());
+        }
+        if (getViewer().size() > 0) {
+            player.addAll(getViewer());
+        }
+
+        return player;
+    }
+
+    public HashMap<UUID, ArenaPlayer> getArenaPlayers() {
+        HashMap<UUID, ArenaPlayer> hashMap = new HashMap<>();
+
+        for (ArenaPlayer arenaPlayer : getArenaViewer()) {
+            hashMap.put(arenaPlayer.getUUID(), arenaPlayer);
+        }
+
+        for (ArenaPlayer arenaPlayer : getArenaTeamRed()) {
+            hashMap.put(arenaPlayer.getUUID(), arenaPlayer);
+        }
+
+        for (ArenaPlayer arenaPlayer : getArenaTeamBlue()) {
+            hashMap.put(arenaPlayer.getUUID(), arenaPlayer);
+        }
+
+        return hashMap;
+    }
+
+    public HashMap<TeamEnum, Hologram> getHolograms() {
+        return holograms;
+    }
+
+    public ArenaState getArenaState() {
+        return arenaState;
+    }
+
     public String getName() {
-        return name;
+        return name.substring(0, 1).toUpperCase() + name.substring(1);
     }
 
     public Location getViewerSpawn() {
@@ -148,6 +660,10 @@ public class ArenaManager {
         return SpawnTeam2;
     }
 
+    public Location getCenter() {
+        return center;
+    }
+
     public boolean isInited() {
         return inited;
     }
@@ -161,193 +677,338 @@ public class ArenaManager {
         locations.put("joinTeam2", getJoinTeam2());
         locations.put("SpawnTeam1", getSpawnTeam1());
         locations.put("SpawnTeam2", getSpawnTeam2());
+        locations.put("Center", getCenter());
         return locations;
     }
 
-    public HashMap<Location, TeamEnum> getJoinLocations(){
-        HashMap<Location, TeamEnum> joinsMap = new HashMap<>();
+    public HashMap<TeamEnum, Location> getSpawnLocations() {
+        HashMap<TeamEnum, Location> joinsMap = new HashMap<>();
 
-        joinsMap.put(getJoinTeam1(), TeamEnum.RED);
-        joinsMap.put(getJoinTeam2(), TeamEnum.BLUE);
+        joinsMap.put(TeamEnum.RED, getSpawnTeam1());
+        joinsMap.put(TeamEnum.BLUE, getSpawnTeam2());
         return joinsMap;
     }
 
-    /**
-     * Independent Method, to Load all Arena Positions form the Config File.
-     */
-    public static void load() {
-        ConfigurationSection cs = files.arenaFile.getSection("arena");
-        if (cs.getKeys(false).isEmpty()) return;
+    public HashMap<TeamEnum, Location> getJoinLocations() {
+        HashMap<TeamEnum, Location> joinsMap = new HashMap<>();
 
-        for (String arenaName : cs.getKeys(false)) {
-            if (files.arenaManager.containsKey(arenaName)) continue;
+        joinsMap.put(TeamEnum.RED, getJoinTeam1());
+        joinsMap.put(TeamEnum.BLUE, getJoinTeam2());
+        return joinsMap;
+    }
 
-            Location viewerSpawn = new Location(Bukkit.getWorld(cs.getString(arenaName + ".viewerSpawn.world")),
-                    cs.getDouble(arenaName + ".viewerSpawn.x"),
-                    cs.getDouble(arenaName + ".viewerSpawn.y"),
-                    cs.getDouble(arenaName + ".viewerSpawn.z"),
-                    cs.getLong(arenaName + ".viewerSpawn.yaw"),
-                    cs.getLong(arenaName + ".viewerSpawn.pitch"));
-
-            Location deadPlayerSpawn = new Location(Bukkit.getWorld(cs.getString(arenaName + ".deadPlayerSpawn.world")),
-                    cs.getDouble(arenaName + ".deadPlayerSpawn.x"),
-                    cs.getDouble(arenaName + ".deadPlayerSpawn.y"),
-                    cs.getDouble(arenaName + ".deadPlayerSpawn.z"),
-                    cs.getLong(arenaName + ".deadPlayerSpawn.yaw"),
-                    cs.getLong(arenaName + ".deadPlayerSpawn.pitch"));
-
-            Location exitSpawn = new Location(Bukkit.getWorld(cs.getString(arenaName + ".exitSpawn.world")),
-                    cs.getDouble(arenaName + ".exitSpawn.x"),
-                    cs.getDouble(arenaName + ".exitSpawn.y"),
-                    cs.getDouble(arenaName + ".exitSpawn.z"),
-                    cs.getLong(arenaName + ".exitSpawn.yaw"),
-                    cs.getLong(arenaName + ".exitSpawn.pitch"));
-
-            Location joinTeam1 = new Location(Bukkit.getWorld(cs.getString(arenaName + ".joinTeam1.world")),
-                    cs.getDouble(arenaName + ".joinTeam1.x"),
-                    cs.getDouble(arenaName + ".joinTeam1.y"),
-                    cs.getDouble(arenaName + ".joinTeam1.z"));
-
-            Location joinTeam2 = new Location(Bukkit.getWorld(cs.getString(arenaName + ".joinTeam2.world")),
-                    cs.getDouble(arenaName + ".joinTeam2.x"),
-                    cs.getDouble(arenaName + ".joinTeam2.y"),
-                    cs.getDouble(arenaName + ".joinTeam2.z"));
-
-            Location SpawnTeam1 = new Location(Bukkit.getWorld(cs.getString(arenaName + ".spawnTeam1.world")),
-                    cs.getDouble(arenaName + ".spawnTeam1.x"),
-                    cs.getDouble(arenaName + ".spawnTeam1.y"),
-                    cs.getDouble(arenaName + ".spawnTeam1.z"),
-                    cs.getLong(arenaName + ".spawnTeam1.yaw"),
-                    cs.getLong(arenaName + ".spawnTeam1.pitch"));
-
-            Location SpawnTeam2 = new Location(Bukkit.getWorld(cs.getString(arenaName + ".spawnTeam2.world")),
-                    cs.getDouble(arenaName + ".spawnTeam2.x"),
-                    cs.getDouble(arenaName + ".spawnTeam2.y"),
-                    cs.getDouble(arenaName + ".spawnTeam2.z"),
-                    cs.getLong(arenaName + ".spawnTeam2.yaw"),
-                    cs.getLong(arenaName + ".spawnTeam2.pitch"));
-
-            ArenaManager arenaManager = new ArenaManager(arenaName, viewerSpawn, deadPlayerSpawn, exitSpawn, joinTeam1, joinTeam2, SpawnTeam1, SpawnTeam2);
-
-            boolean inited = cs.getBoolean(arenaName + ".inited");
-            if (inited) {
-
-                HashMap<TeamEnum, TeamManager> teams = new HashMap<>();
-
-                for (TeamEnum team : cs.getStringList(arenaName + ".teams").stream().map(TeamEnum::valueOf).collect(Collectors.toList())) {
-                    HashMap<UUID, ArenaPlayer> memberMap = new HashMap<>();
-
-                    int wins = cs.getInt(arenaName + "." + team.name + ".wins");
-                    int loses = cs.getInt(arenaName + "." + team.name + ".loses");
-
-                    for (String stringUUID : cs.getStringList(arenaName + "." + team.name + ".player")) {
-                        UUID uuid = UUID.fromString(stringUUID);
-                        HashMap<Integer, ItemStack> items = new HashMap<>();
-
-                        for (Integer slot : cs.getIntegerList(arenaName + "." + team.name + ".player." + uuid.toString() + ".items")) {
-                            items.put(slot, cs.getItemStack(arenaName + "." + team.name + ".player." + uuid.toString() + ".items." + slot));
-                        }
-
-
-                        ArenaPlayer arenaPlayer = new ArenaPlayer(uuid, items);
-
-                        memberMap.put(uuid, arenaPlayer);
-                    }
-
-                    TeamManager teamManager = new TeamManager(team, memberMap);
-                    teamManager.setWins(wins);
-                    teamManager.setLoses(loses);
-                    teams.put(team, teamManager);
-                }
-
-                arenaManager.init(teams);
+    public static ArenaManager getPlayerArena(UUID uuid) {
+        for (ArenaManager arenaManager : files.arenaManager.values()) {
+            if (arenaManager.containsUUID(uuid)) {
+                return arenaManager;
             }
-            files.arenaManager.put(arenaName, arenaManager);
+        }
+        return null;
+    }
+
+    public static boolean containsPlayer(UUID uuid) {
+        return getPlayerArena(uuid) != null;
+    }
+
+    public static boolean containsPlayer(Player player) {
+        return getPlayerArena(player.getUniqueId()) != null;
+    }
+
+    @Nullable
+    public static ArenaManager isNeedToTeleport(String name){
+        for (ArenaManager arenaManager : files.arenaManager.values()) {
+            if (arenaManager.getNeedToTeleport().contains(name)) {
+                return arenaManager;
+            }
+        }
+
+        return null;
+    }
+
+    @Nullable
+    public static ItemStack hasPrize(String name){
+        ItemStack stack = null;
+        for (ArenaManager arenaManager : files.arenaManager.values()) {
+            if (arenaManager.getPlayerPrizeMap().containsKey(name)) {
+                stack = arenaManager.getPlayerPrizeMap().get(name);
+                arenaManager.getPlayerPrizeMap().remove(name);
+            }
+        }
+        return stack;
+    }
+
+    public void loadPlayerPrizes(TeamEnum winner){
+        final int figthingPlayers = this.figthingPlayers;
+        int prize = 0;
+
+        ArrayList<Player> winnerPlayers = teamMap.get(winner).getPlayerList();
+        ItemStack prizeItem = null;
+        if(prize == 0){
+            prizeItem = new ItemStack(prizes[0], (int) Math.floor(figthingPlayers/winnerPlayers.size()));
+        } else {
+            if(figthingPlayers <= 2){
+                prizeItem = new ItemStack(prizes[0], (int) Math.floor(figthingPlayers/winnerPlayers.size()));
+            } else {
+                prizeItem = new ItemStack(prizes[1], (int) Math.floor(figthingPlayers/winnerPlayers.size()/2));
+            }
+        }
+
+        for (Player winnerPlayer : winnerPlayers) {
+            System.out.println(files.debug + "§e" + winnerPlayer.getName() + " §7hat durch die Arena §e" + name + " §b" + prizeItem.getAmount() + "x " + prizeItem.getType().name().toUpperCase() + " §7bekommen.");
+            Bukkit.getScheduler().scheduleAsyncDelayedTask(main.getInstance(), () -> {
+                winnerPlayer.sendMessage(" ");
+                winnerPlayer.sendMessage(files.prefix + "§4WICHTIG!");
+                winnerPlayer.sendMessage(files.prefix + "§7Du kannst deinen Preis mit §a/arena prize §7entgegenehmen!");
+                winnerPlayer.sendMessage(files.prefix + "§cWichtig§8: §7Du bekommst nur einmalig zugang zu diesem Inventar!");
+                winnerPlayer.sendMessage(" ");
+            }, 20*15);
+            playerPrizeMap.put(winnerPlayer.getName(), prizeItem);
         }
     }
 
-    /**
-     * Independent Method, to save all Arena Data into a config.
-     */
-    public static void save() {
-        ConfigurationSection cs = files.arenaFile.getSection("arena");
-        for (Map.Entry<String, ArenaManager> arena : files.arenaManager.entrySet()) {
-            String key = arena.getKey();
-            ArenaManager aM = arena.getValue();
+    public static ArenaPlayer getArenaPlayer(UUID uuid) {
+        ArenaManager arenaManager = getPlayerArena(uuid);
 
-            cs.set(key + ".viewerSpawn.world", aM.getViewerSpawn().getWorld().getName());
-            cs.set(key + ".viewerSpawn.x", aM.getViewerSpawn().getX());
-            cs.set(key + ".viewerSpawn.y", aM.getViewerSpawn().getY());
-            cs.set(key + ".viewerSpawn.z", aM.getViewerSpawn().getZ());
-            cs.set(key + ".viewerSpawn.pitch", aM.getViewerSpawn().getPitch());
-            cs.set(key + ".viewerSpawn.yaw", aM.getViewerSpawn().getYaw());
+        if (arenaManager == null) {
+            return null;
+        }
 
-            cs.set(key + ".deadPlayerSpawn.world", aM.getDeadPlayerSpawn().getWorld().getName());
-            cs.set(key + ".deadPlayerSpawn.x", aM.getDeadPlayerSpawn().getX());
-            cs.set(key + ".deadPlayerSpawn.y", aM.getDeadPlayerSpawn().getY());
-            cs.set(key + ".deadPlayerSpawn.z", aM.getDeadPlayerSpawn().getZ());
-            cs.set(key + ".deadPlayerSpawn.pitch", aM.getDeadPlayerSpawn().getPitch());
-            cs.set(key + ".deadPlayerSpawn.yaw", aM.getDeadPlayerSpawn().getYaw());
+        return arenaManager.containsUUID(uuid) ? arenaManager.getPlayer(uuid) : null;
+    }
 
-            cs.set(key + ".exitSpawn.world", aM.getExitSpawn().getWorld().getName());
-            cs.set(key + ".exitSpawn.x", aM.getExitSpawn().getX());
-            cs.set(key + ".exitSpawn.y", aM.getExitSpawn().getY());
-            cs.set(key + ".exitSpawn.z", aM.getExitSpawn().getZ());
-            cs.set(key + ".exitSpawn.pitch", aM.getExitSpawn().getPitch());
-            cs.set(key + ".exitSpawn.yaw", aM.getExitSpawn().getYaw());
+    public static ArenaPlayer getArenaPlayer(Player player) {
+        return getArenaPlayer(player.getUniqueId());
+    }
 
-            cs.set(key + ".joinTeam1.world", aM.getJoinTeam1().getWorld().getName());
-            cs.set(key + ".joinTeam1.x", aM.getJoinTeam1().getX());
-            cs.set(key + ".joinTeam1.y", aM.getJoinTeam1().getY());
-            cs.set(key + ".joinTeam1.z", aM.getJoinTeam1().getZ());
+    public CountdownEnum getActiveCountdown() {
+        return activeCountdown;
+    }
 
-            cs.set(key + ".joinTeam2.world", aM.getJoinTeam2().getWorld().getName());
-            cs.set(key + ".joinTeam2.x", aM.getJoinTeam2().getX());
-            cs.set(key + ".joinTeam2.y", aM.getJoinTeam2().getY());
-            cs.set(key + ".joinTeam2.z", aM.getJoinTeam2().getZ());
+    public String getActiveCountDownString() {
+        if (getActiveCountdown() == null) {
+            return null;
+        }
+        int countDown = getCountDownInstance().get(getActiveCountdown());
+        int minutes = (int) Math.floor(countDown / 60);
+        int seconds = countDown % 60;
+        return (minutes > 9 ? "" + minutes : "0" + minutes) + ":" + (seconds > 9 ? "" + seconds : "0" + seconds);
+    }
 
-            cs.set(key + ".spawnTeam1.world", aM.getSpawnTeam1().getWorld().getName());
-            cs.set(key + ".spawnTeam1.x", aM.getSpawnTeam1().getX());
-            cs.set(key + ".spawnTeam1.y", aM.getSpawnTeam1().getY());
-            cs.set(key + ".spawnTeam1.z", aM.getSpawnTeam1().getZ());
-            cs.set(key + ".spawnTeam1.pitch", aM.getSpawnTeam1().getPitch());
-            cs.set(key + ".spawnTeam1.yaw", aM.getSpawnTeam1().getYaw());
+    public Integer setActiveCountdown(CountdownEnum countdown) {
 
-            cs.set(key + ".spawnTeam2.world", aM.getSpawnTeam2().getWorld().getName());
-            cs.set(key + ".spawnTeam2.x", aM.getSpawnTeam2().getX());
-            cs.set(key + ".spawnTeam2.y", aM.getSpawnTeam2().getY());
-            cs.set(key + ".spawnTeam2.z", aM.getSpawnTeam2().getZ());
-            cs.set(key + ".spawnTeam2.pitch", aM.getSpawnTeam2().getPitch());
-            cs.set(key + ".spawnTeam2.yaw", aM.getSpawnTeam2().getYaw());
+        activeCountdown = countdown;
+        return temp_countDownInstance.get(countdown);
+    }
 
-            cs.set(key + ".inited", aM.isInited());
+    public void resetActiveCountdown() {
+        temp_countDownInstance.put(getActiveCountdown(), countDownInstance.get(getActiveCountdown()));
+        setActiveCountdown(null);
+    }
 
-            if (aM.isInited()) {
-                for (Map.Entry<TeamEnum, TeamManager> teamManager : aM.getTeamList().entrySet()) {
-                    cs.set(key + ".teams", teamManager.getValue().getTeamEnum().name);
-                    cs.set(key + "." + teamManager.getValue().getTeamEnum().name + ".loses", teamManager.getValue().getLoses());
-                    cs.set(key + "." + teamManager.getValue().getTeamEnum().name + ".wins", teamManager.getValue().getWins());
+    public HashMap<CountdownEnum, Integer> getCountDownInstance() {
+        return temp_countDownInstance;
+    }
 
-                    for (Player player : teamManager.getValue().getPlayerList()) {
-                        UUID uuid = player.getUniqueId();
+    public Integer getRoundsPlayed() {
+        return roundsPlayed;
+    }
 
-                        for (int slot = 0; slot < player.getInventory().getSize(); slot++) {
+    public Integer getMaximalPlayingRounds() {
+        return maximalPlayingRounds;
+    }
 
-                            if (player.getInventory().getItem(slot) == null) {
-                                continue;
-                            }
-                            cs.set(key + "." + teamManager.getValue().getTeamEnum().name + ".player." + uuid.toString() + ".item." + slot, player.getInventory().getItem(slot));
+    public Integer getMaxTeamSize() {
+        return maximalTeamSize;
+    }
+
+    public ArrayList<String> getNeedToTeleport(){
+        return needToTeleport;
+    }
+
+    public HashMap<String, ItemStack> getPlayerPrizeMap(){
+        return playerPrizeMap;
+    }
+
+    public TeamEnum getWinnerTeam() {
+        if (getTeamRed().getWins() < getTeamBlue().getWins() && getTeamBlue().getWins() >= Math.floor(maximalPlayingRounds / 2) + 1) {
+            return TeamEnum.BLUE;
+        } else if (getTeamBlue().getWins() < getTeamRed().getWins() && getTeamRed().getWins() >= Math.floor(maximalPlayingRounds / 2) + 1) {
+            return TeamEnum.RED;
+        }
+
+        return null;
+    }
+
+    private void initScheduler() {
+        if (Bukkit.getScheduler().isQueued(scheduler)) {
+            return;
+        }
+
+        scheduler = Bukkit.getScheduler().scheduleAsyncRepeatingTask(main.getInstance(), () -> {
+
+            try {
+
+                int countDown = temp_countDownInstance.get(getActiveCountdown());
+
+                if (countDown != 0) {
+                    countDown--;
+                    temp_countDownInstance.put(getActiveCountdown(), countDown);
+                }
+
+                if (getActiveCountdown() == CountdownEnum.LOBBY || getActiveCountdown() == CountdownEnum.AFTERFIGHT || getActiveCountdown() == CountdownEnum.WIN || getActiveCountdown() == CountdownEnum.FIGHT) {
+                    for (Player player : getFightersList()) {
+                        player.sendActionBar("§7Timer: §b" + getActiveCountDownString());
+                    }
+                } else if (getActiveCountdown() == CountdownEnum.PREFIGHT) {
+                    String[] colors = {"§aGO", "§21", "§e2", "§c3", "§44", "§55"};
+                    if (countDown <= 5 && countDown >= 0) {
+                        for (Player player : getFightersList()) {
+                            player.sendTitle(Title.builder().title(colors[countDown]).fadeOut(2).fadeIn(2).stay(16).build());
                         }
                     }
+                }
 
+
+                if ((countDown == 60 || countDown == 30 || countDown == 10 || countDown == 20 || countDown == 5 || countDown == 3 || countDown == 2 || countDown == 1)) {
+                    if (getActiveCountdown() == CountdownEnum.LOBBY) {
+                        sendArenaMessage("§7Die Arena startet in §b" + countDown + " Sekunden.");
+                        for (Player player : getPlayers()) {
+                            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 3, countDown / 10);
+                        }
+                    } else if (getActiveCountdown() == CountdownEnum.PREFIGHT) {
+                        sendArenaMessage("§7Runde §b" + getRoundsPlayed() + " §7startet in §b" + countDown + " Sekunden");
+                        for (Player player : getPlayers()) {
+                            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BELL, 3, 4);
+                        }
+                    } else if (getActiveCountdown() == CountdownEnum.FIGHT) {
+                        sendArenaMessage("§7Es verbleiben §b" + countDown + " Sekunden §7um den Kampf zu entscheiden!");
+                        for (Player player : getPlayers()) {
+                            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_HARP, 3, 1);
+                        }
+                    } else if (getActiveCountdown() == CountdownEnum.WIN) {
+                        sendArenaMessage("§7Die Arena wird in §b" + countDown + " Sekunden §7geschlossen!");
+                    }
+                }
+
+                if (countDown == 0) {
+
+                    switch (getActiveCountdown()) {
+                        case LOBBY:
+                            resetActiveCountdown();
+                            initiateFightSequence();
+
+                            return;
+                        case PREFIGHT:
+                            resetActiveCountdown();
+                            fight();
+
+                            return;
+                        case FIGHT:
+                            resetActiveCountdown();
+                            sendFightersMessage("§4Es konnte kein Sieger festgestellt werden! §7Diese Runde wird wiederholt!");
+                            roundsPlayed--;
+                            afterFight();
+
+                            return;
+                        case AFTERFIGHT:
+                            resetActiveCountdown();
+                            if (getWinnerTeam() != null) {
+                                win(getWinnerTeam());
+                            } else {
+                                prefight();
+                            }
+
+                            return;
+                        case WIN:
+                            resetActiveCountdown();
+                            finish();
+                    }
+
+                    resetActiveCountdown();
+                }
+            } catch (NullPointerException ignored) {
+
+            }
+
+            for (Player player : getPlayers()) {
+                if (player != null) {
+                    arenaScoreboard.setScoreboard(player);
                 }
             }
 
+            if (arenaState == ArenaState.LOBBY) {
+                if (getArenaFightersList().size() == getReadyPlayers().size() || getActiveCountdown() != null) {
+                    if (getPlayerTeamRed().size() < 1 || getPlayerTeamBlue().size() < 1) {
+                        if (getActiveCountdown() != null) {
+                            resetActiveCountdown();
+                            inited = false;
+                            sendArenaMessage("§4Arena wurde angehalten aufgrund von zu wenig Spielern.");
+                        }
 
-        }
+                        for (Player player : getPlayers()) {
+                            if (player == null) continue;
+                            ArenaPlayer arenaPlayer = getArenaPlayer(player);
+                            player.sendActionBar("§7Du bist in " + arenaPlayer.getTeam().getTeamString() + " §f| §eWarten auf Spieler..");
+                        }
 
+                        if (lobbyMessage == 90) {
+                            sendArenaMessage("§7Warten auf §bSpieler...");
+                            lobbyMessage = 0;
+                        }
 
-        files.arenaFile.save();
+                    } else {
+
+                        int difference;
+                        TeamEnum biggerTeam;
+
+                        if (getPlayerTeamRed().size() < getPlayerTeamBlue().size()) {
+                            difference = getPlayerTeamBlue().size() - getPlayerTeamRed().size();
+                            biggerTeam = TeamEnum.BLUE;
+                        } else {
+                            difference = getPlayerTeamRed().size() - getPlayerTeamBlue().size();
+                            biggerTeam = TeamEnum.RED;
+                        }
+
+                        if (difference > 1) {
+                            if (lobbyMessage == 60) {
+                                sendArenaMessage("§7Das " + biggerTeam.getTeamString() + " §7ist um §b" + difference + " Spieler §7größer, es gibt nur eine toleranz von §b1 Spieler §7unterschied!");
+                                lobbyMessage = 0;
+                            }
+                        } else {
+                            if (!inited) {
+                                runLobby();
+                            }
+                        }
+
+                    }
+                } else {
+                    for (Player player : getPlayers()) {
+                        if (player == null) continue;
+                        ArenaPlayer arenaPlayer = getArenaPlayer(player);
+                        player.sendActionBar("§7Du bist in " + arenaPlayer.getTeam().getTeamString() + " §f| §e" + getReadyPlayers().size() + "§7/§b" + getFightersList().size());
+                    }
+
+                    if (lobbyMessage == 60) {
+                        int notAccepted = getArenaFightersList().size() - getReadyPlayers().size();
+                        if (notAccepted < 2) {
+                            sendArenaMessage("§7Es hat §b" + (notAccepted) + " Spieler §7noch nicht accepted!");
+                        } else {
+                            sendArenaMessage("§7Es haben §b" + (notAccepted) + " Spieler §7noch nicht accepted!");
+                        }
+
+                        lobbyMessage = 0;
+                    }
+                }
+
+                lobbyMessage++;
+            }
+
+        }, 20, 20);
+    }
+
+    private void deInitScheduler() {
+        Bukkit.getScheduler().cancelTask(scheduler);
+        setActiveCountdown(null);
     }
 
 }

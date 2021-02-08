@@ -45,11 +45,12 @@ public class JoinAndQuitListener implements Listener {
             return;
         }
 
-        if (!streamer.contains(e.getPlayer().getUniqueId()) && !e.getPlayer().isOp() && (worker.contains(e.getPlayer().getUniqueId()) && files.workerState != WorkerState.ALWAYS)) {
+        if (!streamer.contains(e.getPlayer().getUniqueId()) && !e.getPlayer().isOp() && (!worker.contains(e.getPlayer().getUniqueId()) && files.workerState != WorkerState.ALWAYS)) {
             if (files.state == ServerState.CLOSED) {
                 e.disallow(PlayerLoginEvent.Result.KICK_OTHER, "§4Du wurdest gekickt!\n§cEs befindet sich derzeit kein Streamer auf dem Server!\n§bBitte komm später vorbei um dem Server beizutreten!");
             }
         }
+
 
     }
 
