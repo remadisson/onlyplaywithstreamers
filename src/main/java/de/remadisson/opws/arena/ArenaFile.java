@@ -136,12 +136,12 @@ public class ArenaFile {
             cs.set(key + ".spawnTeam2.pitch", aM.getSpawnTeam2().getPitch());
             cs.set(key + ".spawnTeam2.yaw", aM.getSpawnTeam2().getYaw());
 
-            cs.set(key + ".center.world", aM.getSpawnTeam2().getWorld().getName());
-            cs.set(key + ".center.x", aM.getSpawnTeam2().getX());
-            cs.set(key + ".center.y", aM.getSpawnTeam2().getY());
-            cs.set(key + ".center.z", aM.getSpawnTeam2().getZ());
-            cs.set(key + ".center.pitch", aM.getSpawnTeam2().getPitch());
-            cs.set(key + ".center.yaw", aM.getSpawnTeam2().getYaw());
+            cs.set(key + ".center.world", aM.getCenter().getWorld().getName());
+            cs.set(key + ".center.x", aM.getCenter().getX());
+            cs.set(key + ".center.y", aM.getCenter().getY());
+            cs.set(key + ".center.z", aM.getCenter().getZ());
+            cs.set(key + ".center.pitch", aM.getCenter().getPitch());
+            cs.set(key + ".center.yaw", aM.getCenter().getYaw());
         }
 
 

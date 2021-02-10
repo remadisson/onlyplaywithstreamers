@@ -1,14 +1,13 @@
 package de.remadisson.opws;
 
+import de.remadisson.opws.api.DiscordWebhook;
 import de.remadisson.opws.api.FileAPI;
 import de.remadisson.opws.api.MojangAPI;
 import de.remadisson.opws.arena.ArenaFile;
 import de.remadisson.opws.arena.ArenaManager;
-import de.remadisson.opws.enums.ServerState;
-import de.remadisson.opws.enums.TeamEnum;
-import de.remadisson.opws.enums.Warp;
-import de.remadisson.opws.enums.WorkerState;
+import de.remadisson.opws.enums.*;
 import de.remadisson.opws.manager.*;
+import io.netty.handler.codec.http.HttpResponse;
 import net.md_5.bungee.api.ChatColor;
 import net.minecraft.server.v1_16_R2.EnumChatFormat;
 import org.bukkit.Bukkit;
@@ -16,8 +15,12 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.PermissionAttachment;
 import org.bukkit.permissions.PermissionAttachmentInfo;
+import sun.net.www.http.HttpClient;
 
 
+import javax.annotation.Nullable;
+import java.awt.*;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -320,6 +323,32 @@ public class files {
         }
     }
 
+    public static void sendDiscordWebhook(DiscordWebHookState webHookState, String initator){
+        DiscordWebhook discord = new DiscordWebhook("https://discord.com/api/webhooks/808432353457995806/ZLpR_H5K78k466CEgmFKhBV2Mn4Xsfrqz_f7WazYxcWtgIhlgFqtfIok-jEJ_gAd_VmX");
+        switch (webHookState){
+            case OPEN:
+                discord.addEmbed(new DiscordWebhook.EmbedObject().setTitle("Server-Status")
+                        .setAuthor(initator, null, null).setColor(Color.GREEN).addField("Status", webHookState.name(), true).addField("Nachricht", "Der Server kann kann nun von allen betreten werden!", false));
+                break;
+            case CLOSED:
+                discord.addEmbed(new DiscordWebhook.EmbedObject().setTitle("Server-Status")
+                        .setAuthor(initator, null, null).setColor(Color.RED).addField("Status", webHookState.name(), true).addField("Nachricht", "Der Server ist nun geschlossen, da kein Streamer mehr online ist!", false));
+                break;
+            case MAINTENANCE:
+                discord.addEmbed(new DiscordWebhook.EmbedObject().setTitle("Server-Status")
+                        .setAuthor(initator, null, null).setColor(Color.YELLOW).addField("Status", webHookState.name(), true).addField("Nachricht", "Der Server steht nun unter Wartungsarbeiten!", false));
+                break;
+            case READY:
+                discord.addEmbed(new DiscordWebhook.EmbedObject().setTitle("Server-Status")
+                        .setAuthor(initator, null, null).setColor(Color.GREEN).addField("Status", webHookState.name(), true).addField("Nachricht", "Der Server kann nun wieder von einem Streamer geöffnet werden!", false));
+        }
 
+        try {
+            discord.execute();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
 
 }

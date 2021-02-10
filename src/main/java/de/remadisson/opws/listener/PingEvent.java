@@ -12,6 +12,13 @@ public class PingEvent implements Listener {
     public void onServerPing(PaperServerListPingEvent e){
         ServerState state = files.state;
 
+        if(state == ServerState.STARTUP){
+            e.setMotd("§bSTARTUP SEQUENCE! - §aSlowdown, give us some time");
+            e.setVersion("§bSTARTUP");
+            e.setProtocolVersion(1);
+            return;
+        }
+
         if(files.maintenance){
             e.setMotd("§c§ka§r§4§lMaintenance §7- §4Wartungarbeiten!§c§ka");
             e.setVersion("§cOFFLINE");
@@ -32,10 +39,6 @@ public class PingEvent implements Listener {
         } else if(state == ServerState.OPEN){
             e.setMotd("§a§lGeöffnet §f- §eSpiele mit!");
             e.setVersion("§aONLINE");
-        } else if(state == ServerState.STARTUP){
-            e.setMotd("§bSTARTUP SEQUENCE! - §aSlowdown, give us some time");
-            e.setVersion("§bSTARTUP");
-            e.setProtocolVersion(1);
         }
 
 

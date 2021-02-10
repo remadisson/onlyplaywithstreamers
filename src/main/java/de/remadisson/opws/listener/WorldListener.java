@@ -1,5 +1,6 @@
 package de.remadisson.opws.listener;
 
+import de.remadisson.opws.arena.ArenaManager;
 import de.remadisson.opws.files;
 import de.remadisson.opws.manager.WorldManager;
 import org.bukkit.World;
@@ -92,6 +93,20 @@ public class WorldListener {
 
 
         return false;
+    }
+
+    public static void CheckArenaReset(){
+        long lastReset = ArenaManager.lastResetMillis;
+        Calendar old = Calendar.getInstance();
+        old.setTimeInMillis(lastReset);
+        Calendar newcal = Calendar.getInstance();
+
+        if(newcal.get(Calendar.YEAR) == old.get(Calendar.YEAR)
+                && newcal.get(Calendar.MONTH) == old.get(Calendar.MONTH)
+                && newcal.get(Calendar.DAY_OF_MONTH) != old.get(Calendar.DAY_OF_MONTH)){
+            ArenaManager.alreadyArenaPlayedPlayer.clear();
+            System.out.println(files.debug + "§bArenaPlayer have been resettet!");
+        }
     }
 
 }

@@ -26,7 +26,10 @@ import java.util.stream.Collectors;
 
 public class ArenaManager {
 
-    //public final HashMap<UUID, ArenaPlayer> players = new HashMap<>();
+    public static ArrayList<UUID> alreadyArenaPlayedPlayer = new ArrayList<>();
+    public static ArrayList<UUID> infiniteAllowedPlay = new ArrayList<>();
+    public static long lastResetMillis = new Date().getTime();
+    public static boolean infitePlay = false;
 
     private String name;
     private final Location viewerSpawn;
@@ -56,8 +59,8 @@ public class ArenaManager {
     private HashMap<CountdownEnum, Integer> countDownInstance = new HashMap<>();
     private HashMap<CountdownEnum, Integer> temp_countDownInstance;
     private CountdownEnum activeCountdown;
-    private ArrayList<String> needToTeleport = new ArrayList<>();
-    private HashMap<String, ItemStack> playerPrizeMap = new HashMap<>();
+    private ArrayList<UUID> needToTeleport = new ArrayList<>();
+    private HashMap<UUID, ItemStack> playerPrizeMap = new HashMap<>();
 
     private boolean inited = false;
 
@@ -193,6 +196,7 @@ public class ArenaManager {
             team.setLoses(0);
             team.setWins(0);
             for (ArenaPlayer arenaPlayer : team.getArenaPlayerList()) {
+                alreadyArenaPlayedPlayer.add(arenaPlayer.getPlayer().getUniqueId());
                 removePlayer(arenaPlayer.getPlayer());
             }
         }
@@ -715,9 +719,9 @@ public class ArenaManager {
     }
 
     @Nullable
-    public static ArenaManager isNeedToTeleport(String name){
+    public static ArenaManager isNeedToTeleport(UUID uuid){
         for (ArenaManager arenaManager : files.arenaManager.values()) {
-            if (arenaManager.getNeedToTeleport().contains(name)) {
+            if (arenaManager.getNeedToTeleport().contains(uuid)) {
                 return arenaManager;
             }
         }
@@ -726,12 +730,12 @@ public class ArenaManager {
     }
 
     @Nullable
-    public static ItemStack hasPrize(String name){
+    public static ItemStack hasPrize(UUID uuid){
         ItemStack stack = null;
         for (ArenaManager arenaManager : files.arenaManager.values()) {
-            if (arenaManager.getPlayerPrizeMap().containsKey(name)) {
-                stack = arenaManager.getPlayerPrizeMap().get(name);
-                arenaManager.getPlayerPrizeMap().remove(name);
+            if (arenaManager.getPlayerPrizeMap().containsKey(uuid)) {
+                stack = arenaManager.getPlayerPrizeMap().get(uuid);
+                arenaManager.getPlayerPrizeMap().remove(uuid);
             }
         }
         return stack;
@@ -762,7 +766,7 @@ public class ArenaManager {
                 winnerPlayer.sendMessage(files.prefix + "§cWichtig§8: §7Du bekommst nur einmalig zugang zu diesem Inventar!");
                 winnerPlayer.sendMessage(" ");
             }, 20*15);
-            playerPrizeMap.put(winnerPlayer.getName(), prizeItem);
+            playerPrizeMap.put(winnerPlayer.getUniqueId(), prizeItem);
         }
     }
 
@@ -821,11 +825,11 @@ public class ArenaManager {
         return maximalTeamSize;
     }
 
-    public ArrayList<String> getNeedToTeleport(){
+    public ArrayList<UUID> getNeedToTeleport(){
         return needToTeleport;
     }
 
-    public HashMap<String, ItemStack> getPlayerPrizeMap(){
+    public HashMap<UUID, ItemStack> getPlayerPrizeMap(){
         return playerPrizeMap;
     }
 

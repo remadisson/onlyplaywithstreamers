@@ -43,7 +43,7 @@ public final class main extends JavaPlugin {
          */
         Bukkit.getConsoleSender().sendMessage(console + "§aOnlyPlayWithStreamers started!");
 
-        CheckStreamerManager.doCycle();
+        GeneralSchedulerManager.doCycle();
 
         for(Player online : Bukkit.getOnlinePlayers()){
             UUID uuid = online.getUniqueId();

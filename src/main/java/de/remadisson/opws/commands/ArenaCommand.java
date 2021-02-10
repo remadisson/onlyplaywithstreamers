@@ -147,7 +147,7 @@ public class ArenaCommand implements TabExecutor {
                     }
 
 
-                    ItemStack stack = ArenaManager.hasPrize(((Player) sender).getName());
+                    ItemStack stack = ArenaManager.hasPrize(((Player) sender).getUniqueId());
 
                     if(stack == null){
                         sender.sendMessage(prefix + "§cDu hast keinen Preis!");

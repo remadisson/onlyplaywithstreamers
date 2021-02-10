@@ -54,6 +54,11 @@ public class ArenaEvents implements Listener {
                                 return;
                             }
 
+                            if(ArenaManager.alreadyArenaPlayedPlayer.contains(player.getUniqueId()) && !ArenaManager.infiniteAllowedPlay.contains(e.getPlayer().getUniqueId()) && !ArenaManager.infitePlay){
+                                player.sendMessage(prefix + "§cDu hast heute bereits gespielt!");
+                                return;
+                            }
+
                             if (ArenaManager.containsPlayer(player.getUniqueId())) {
                                 ArenaPlayer arenaPlayer = ArenaManager.getArenaPlayer(player.getUniqueId());
                                 player.sendMessage(prefix + "§cDu bist bereits in " + arenaPlayer.getTeam().getColor() + "Team " + arenaPlayer.getTeam().getName() + "!");
@@ -307,17 +312,17 @@ public class ArenaEvents implements Listener {
             } else {
                 arenaManager.removeViewer(e.getPlayer());
             }
-            arenaManager.getNeedToTeleport().add(e.getPlayer().getName());
+            arenaManager.getNeedToTeleport().add(e.getPlayer().getUniqueId());
         }
     }
 
     @EventHandler (priority = EventPriority.HIGH)
     public void onJoin(PlayerJoinEvent e){
-        ArenaManager arenaManager = ArenaManager.isNeedToTeleport(e.getPlayer().getName());
+        ArenaManager arenaManager = ArenaManager.isNeedToTeleport(e.getPlayer().getUniqueId());
         if(arenaManager != null){
             e.getPlayer().teleport(arenaManager.getExitSpawn());
             e.getPlayer().sendMessage(prefix + "§7Du musstest teleportiert werden!");
-            arenaManager.getNeedToTeleport().remove(e.getPlayer().getName());
+            arenaManager.getNeedToTeleport().remove(e.getPlayer().getUniqueId());
         }
 
     }
