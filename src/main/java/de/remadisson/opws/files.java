@@ -259,6 +259,7 @@ public class files {
             attachment.setPermission("minecraft.command.teleport", true);
             attachment.setPermission("opws.city", true);
             attachment.setPermission("opws.staff", true);
+            attachment.setPermission("opws.warp", true);
 
         } else if (streamerManager.getStreamer().contains(uuid) && !player.isOp() && !streamerManager.getWorker().contains(uuid)) {
 
@@ -267,6 +268,10 @@ public class files {
 
             if (permissions.contains("opws.ban")) {
                 attachment.setPermission("opws.ban", false);
+            }
+
+            if (permissions.contains("opws.warp")) {
+                attachment.setPermission("opws.warp", false);
             }
 
             if (permissions.contains("opws.banlist")) {
