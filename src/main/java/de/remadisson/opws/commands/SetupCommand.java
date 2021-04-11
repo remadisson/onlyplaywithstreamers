@@ -64,7 +64,7 @@ public class SetupCommand implements CommandExecutor, TabCompleter {
                             files.maintenance = true;
 
                             sender.sendMessage(prefix + "§eYou have turned §aon §ethe Maintenance!");
-                            files.sendDiscordWebhook(DiscordWebHookState.MAINTENANCE, sender.getName());
+                            files.sendDiscordServerStatus(DiscordWebHookState.MAINTENANCE, sender.getName());
 
                             return true;
                         case "off":
@@ -77,7 +77,7 @@ public class SetupCommand implements CommandExecutor, TabCompleter {
                             files.maintenance = false;
 
                             sender.sendMessage(prefix + "§eYou have turned §4off §ethe Maintenance!");
-                            files.sendDiscordWebhook(DiscordWebHookState.READY, sender.getName());
+                            files.sendDiscordServerStatus(DiscordWebHookState.READY, sender.getName());
                             return true;
 
                         default:
@@ -378,6 +378,54 @@ public class SetupCommand implements CommandExecutor, TabCompleter {
 
                             return true;
                         }
+
+                        case "state":{
+                            if(thirdArgument.equalsIgnoreCase("true") || thirdArgument.equalsIgnoreCase("1") || thirdArgument.equalsIgnoreCase("on")){
+                                if(files.allowArenaFight){
+                                    sender.sendMessage(files.prefix + "§7ArenaFights are §calready §aenabled!");
+                                    return false;
+                                }
+
+                                sender.sendMessage(files.prefix + "§7ArenaFights are now §aenabled!");
+                                files.allowArenaFight = true;
+                                return true;
+
+                            } else if(thirdArgument.equalsIgnoreCase("false") || thirdArgument.equalsIgnoreCase("0") || thirdArgument.equalsIgnoreCase("off")){
+
+                                if(!files.allowArenaFight){
+                                    sender.sendMessage(files.prefix + "§7ArenaFights are §calready §4disallowed!");
+                                    return false;
+                                }
+
+                                sender.sendMessage(files.prefix + "§7ArenaFights are now §4disallowed!");
+                                files.allowArenaFight = false;
+
+                                return true;
+                            } else {
+                                sendHelp(sender);
+                            }
+
+                            return true;
+                        }
+
+                        case "resetplayerplayed": {
+                            Player target = Bukkit.getPlayer(args[2]);
+
+                            if(target == null || !target.isOnline()){
+                                sender.sendMessage(prefix + "§cThe Player §4" + args[2] + " §cis not online!");
+                                return true;
+                            }
+
+                            if(!ArenaManager.alreadyArenaPlayedPlayer.contains(target.getUniqueId())){
+                                sender.sendMessage(prefix + "§cThe Player hasn't played today!");
+                                return true;
+                            }
+
+                            sender.sendMessage(prefix + "§7Arena Status resettet for §a" + target.getName());
+                            ArenaManager.alreadyArenaPlayedPlayer.remove(target.getUniqueId());
+                            return true;
+                        }
+
                         default:
                             sendHelp(sender);
                     }
@@ -399,7 +447,7 @@ public class SetupCommand implements CommandExecutor, TabCompleter {
         ArrayList<String> indexes = new ArrayList<>(Arrays.asList("maintenance", "worker", "arena", "warp"));
         String[] onOFF = {"on", "off"};
         String[] worker = {"always", "maintenance", "opened"};
-        String[] arena = {"list", "create", "remove", "test", "infiniteplay"};
+        String[] arena = {"list", "create", "remove", "test", "infiniteplay", "state", "resetplayerplayed"};
 
         if (args.length == 1) {
             if (sender.hasPermission(permission[0])) {
@@ -450,7 +498,7 @@ public class SetupCommand implements CommandExecutor, TabCompleter {
                             flist.add(keys);
                         }
                     }
-                } else if (args[1].equalsIgnoreCase("infiniteplay")) {
+                } else if (args[1].equalsIgnoreCase("infiniteplay") || args[1].equalsIgnoreCase("state")) {
                     for (String s : onOFF) {
                         if (s.startsWith(args[2].toLowerCase())) {
                             flist.add(s);
@@ -461,6 +509,12 @@ public class SetupCommand implements CommandExecutor, TabCompleter {
                             if (online.getName().toLowerCase().startsWith(args[2].toLowerCase())) {
                                 flist.add(online.getName());
                             }
+                        }
+                    }
+                } else if(args[2].length() >= 1 &&args[1].equalsIgnoreCase("resetplayerplayed")){
+                    for(Player player : Bukkit.getOnlinePlayers()){
+                        if(player.getName().startsWith(args[2].toLowerCase())){
+                            flist.add(player.getName());
                         }
                     }
                 }
@@ -474,7 +528,7 @@ public class SetupCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage(prefix + "§eHelp for §6/setup");
         sender.sendMessage(prefix + "§f - §e/setup maintenance <on/off>");
         sender.sendMessage(prefix + "§f - §e/setup worker <always/maintenance/opened>");
-        sender.sendMessage(prefix + "§f - §e/setup arena <list/create/remove/test> <Name>");
+        sender.sendMessage(prefix + "§f - §e/setup arena <list/create/remove/test/state/infiniteplay/resetplayerplayed> <Name>");
 
 
     }

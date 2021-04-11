@@ -27,5 +27,13 @@ commands:
     description: Set some fudamental Variables for the maintenance part of the Event.
   arena:
     description: Completes the functionality for the Arena.
-  vanish:
-    description: Vanishes you from others!
+  staff:
+    description: Gives you opportunities!
+  kick:
+    description: Kicks Players for you!
+  banlist:
+    description: Lists the bans.
+  ban:
+    description: This is probably a description for an obvious.
+  unban:
+    description: This is probably a description for an obvious command.

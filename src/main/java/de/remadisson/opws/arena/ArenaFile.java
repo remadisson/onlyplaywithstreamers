@@ -1,13 +1,11 @@
 package de.remadisson.opws.arena;
 
-import de.remadisson.opws.enums.TeamEnum;
 import de.remadisson.opws.files;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.inventory.ItemStack;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -78,6 +76,7 @@ public class ArenaFile {
                     cs.getLong(arenaName + ".center.pitch"));
 
             ArenaManager arenaManager = new ArenaManager(arenaName, viewerSpawn, deadPlayerSpawn, exitSpawn, joinTeam1, joinTeam2, SpawnTeam1, SpawnTeam2, Center);
+            arenaManager.setNeedToTeleport((ArrayList<UUID>) cs.getStringList(arenaName + ".needToTeleport").stream().map(UUID::fromString).collect(Collectors.toList()));
             files.arenaManager.put(arenaName, arenaManager);
         }
     }
@@ -87,10 +86,10 @@ public class ArenaFile {
      */
     public static void save() {
         ConfigurationSection cs = files.arenaFile.getSection("arena");
+
         for (Map.Entry<String, ArenaManager> arena : files.arenaManager.entrySet()) {
             String key = arena.getKey();
             ArenaManager aM = arena.getValue();
-
             cs.set(key + ".viewerSpawn.world", aM.getViewerSpawn().getWorld().getName());
             cs.set(key + ".viewerSpawn.x", aM.getViewerSpawn().getX());
             cs.set(key + ".viewerSpawn.y", aM.getViewerSpawn().getY());
@@ -142,6 +141,8 @@ public class ArenaFile {
             cs.set(key + ".center.z", aM.getCenter().getZ());
             cs.set(key + ".center.pitch", aM.getCenter().getPitch());
             cs.set(key + ".center.yaw", aM.getCenter().getYaw());
+
+            cs.set(key + ".needToTeleport", aM.getNeedToTeleport().stream().map(UUID::toString).collect(Collectors.toList()));
         }
 
 

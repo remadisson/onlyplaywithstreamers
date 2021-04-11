@@ -2,6 +2,7 @@ package de.remadisson.opws.manager;
 
 import de.remadisson.opws.api.FileAPI;
 import de.remadisson.opws.events.PlayerChangePermissionEvent;
+import de.remadisson.opws.files;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 
@@ -21,8 +22,8 @@ public class StreamerManager {
 
     public StreamerManager addStreamer(UUID uuid){
         streamer.add(uuid);
-        if(!Bukkit.getOfflinePlayer(uuid).isWhitelisted()) {
-            Bukkit.getOfflinePlayer(uuid).setWhitelisted(true);
+        if(!files.whitelist.contains(uuid)){
+            files.whitelist.add(uuid);
         }
         Bukkit.getPluginManager().callEvent(new PlayerChangePermissionEvent());
         return this;
@@ -40,8 +41,8 @@ public class StreamerManager {
 
     public StreamerManager addWorker(UUID uuid){
         worker.add(uuid);
-        if(!Bukkit.getOfflinePlayer(uuid).isWhitelisted()){
-            Bukkit.getOfflinePlayer(uuid).setWhitelisted(true);
+        if(!files.whitelist.contains(uuid)){
+            files.whitelist.add(uuid);
         }
         Bukkit.getPluginManager().callEvent(new PlayerChangePermissionEvent());
         return this;
@@ -49,8 +50,6 @@ public class StreamerManager {
 
     public StreamerManager removeWorker(UUID uuid){
         worker.remove(uuid);
-        Bukkit.getOfflinePlayer(uuid).setWhitelisted(false);
-
         Bukkit.getPluginManager().callEvent(new PlayerChangePermissionEvent());
         return this;
     }
@@ -108,22 +107,5 @@ public class StreamerManager {
             }
         }
      return arrayList;
-    }
-
-    public StreamerManager syncWhitelist(){
-        for(OfflinePlayer streamer : getStreamer().stream().map(Bukkit::getOfflinePlayer).collect(Collectors.toList())){
-            if(!streamer.isWhitelisted()){
-                streamer.setWhitelisted(true);
-                Bukkit.getWhitelistedPlayers().add(streamer);
-            }
-        }
-
-        for(OfflinePlayer worker : getWorker().stream().map(Bukkit::getOfflinePlayer).collect(Collectors.toList())){
-            if(!worker.isWhitelisted()){
-                worker.setWhitelisted(true);
-                Bukkit.getWhitelistedPlayers().add(worker);
-            }
-        }
-        return this;
     }
 }

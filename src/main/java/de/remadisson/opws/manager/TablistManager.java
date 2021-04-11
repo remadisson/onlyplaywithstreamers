@@ -23,6 +23,7 @@ public class TablistManager {
 
     public void updateTeam(Player p, String prefix, EnumChatFormat color, String suffix, int level){
         String s = level + p.getUniqueId().toString().substring(1, 6);
+        if(p.getName().startsWith("§r")) return;
 
         if(scoreboard.getTeam(s) != null){
             scoreboard.removeTeam(scoreboard.getTeam(s));
@@ -46,6 +47,8 @@ public class TablistManager {
 
     private void update(){
         for(Player online : Bukkit.getOnlinePlayers()){
+            if(online.getName().startsWith("§r")) continue;
+
             if(!scoreboard.getTeam(teams.get(online.getUniqueId())).getPlayerNameSet().contains(online.getName())){
                 scoreboard.getTeam(teams.get(online.getUniqueId())).getPlayerNameSet().add(online.getName());
             }

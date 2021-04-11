@@ -7,9 +7,11 @@ import com.google.gson.JsonParser;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 public class JsonUtils {
@@ -68,5 +70,22 @@ public class JsonUtils {
         }
 
         return playerProfile;
+    }
+
+    public static HashMap<String, String> getPlayerSkin(UUID uuid) throws IOException {
+        HashMap<String, String> skinMap = new HashMap<>();
+
+        URL url =  new URL("https://sessionserver.mojang.com/session/minecraft/profile/" + uuid.toString() + "?unsigned=false");
+
+        InputStreamReader reader = new InputStreamReader(url.openStream());
+
+        JsonObject property = new JsonParser().parse(reader).getAsJsonObject().get("properties").getAsJsonArray().get(0).getAsJsonObject();
+
+        String texture = property.get("value").getAsString();
+        String signature = property.get("signature").getAsString();
+
+        skinMap.put("texture", texture);
+        skinMap.put("signature", signature);
+        return skinMap;
     }
 }

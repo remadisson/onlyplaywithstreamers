@@ -1,12 +1,17 @@
 package de.remadisson.opws.listener;
 
+import de.remadisson.opws.arena.ArenaManager;
+import de.remadisson.opws.commands.StaffCommand;
 import de.remadisson.opws.enums.DiscordWebHookState;
 import de.remadisson.opws.enums.ServerState;
 import de.remadisson.opws.files;
+import de.remadisson.opws.heaven.HeavenManager;
 import de.remadisson.opws.main;
 import de.remadisson.opws.manager.StreamerManager;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+
+import java.util.Objects;
 
 public class GeneralSchedulerManager {
 
@@ -50,8 +55,7 @@ public class GeneralSchedulerManager {
                 }
 
                 if(worldcount == 0){
-                    if(WorldListener.WorldCycle()) initiateWarp = false;
-                    if(WorldListener.NetherCycle()) initiateWarp = false;
+                    if(WorldListener.WorldCycle() || WorldListener.NetherCycle()) initiateWarp = false;
                     WorldListener.CheckArenaReset();
                     worldcount = 60*30;
                 }
@@ -71,7 +75,39 @@ public class GeneralSchedulerManager {
                     cycle_times = 0;
                 }
 
+                if(!StaffCommand.vanishPlayer.isEmpty()){
+                    for (Player player : StaffCommand.vanishPlayer) {
+                        if(!ArenaManager.containsPlayer(player)){
+                            player.sendActionBar("§7Du bist §b§lunsichtbar");
+                        }
+                    }
+                }
+
+                if(files.heavenManager != null) {
+                    if (!files.heavenManager.getHeavenPlayerMap().isEmpty()) {
+                        for (HeavenManager.HeavenPlayer heavenPlayer : files.heavenManager.getHeavenPlayerMap().values()) {
+                            if (Bukkit.getPlayer(heavenPlayer.getUUID()) != null && Objects.requireNonNull(Bukkit.getPlayer(heavenPlayer.getUUID())).isOnline()) {
+                                Objects.requireNonNull(Bukkit.getPlayer(heavenPlayer.getUUID())).sendActionBar("§bHimmelszeit §7〣 §f" + heavenPlayer.getDistanceAsString());
+                            }
+                        }
+                    }
+                }
+
             }, 20, 20);
+        });
+
+        files.pool.execute(() -> {
+            Bukkit.getScheduler().scheduleSyncRepeatingTask(main.getInstance(), () -> {
+                if(files.heavenManager == null){
+                    System.out.println(files.debug + (files.warpManager.getWarp("heaven") != null));
+                    files.heavenManager = new HeavenManager(files.warpManager.getWarp("heaven") != null ? files.warpManager.getWarp("heaven").getLocation() : files.warpManager.getWarp("spawn").getLocation());
+                    files.heavenManager.loadHeavenNeedToTeleport();
+                    System.out.println(files.debug + "HeavenManager loaded!");
+                } else {
+                    files.heavenManager.checkHeaven();
+                }
+
+            }, 4*20, 10*30);
         });
     }
 
@@ -92,7 +128,7 @@ public class GeneralSchedulerManager {
                 //Bukkit.getServer().getConsoleSender().sendMessage(console + "§eDer Server ist nun geöffnet.");
                 Bukkit.broadcastMessage(prefix + "§eDer Server ist nun geöffnet.");
                 files.state = ServerState.OPEN;
-                files.sendDiscordWebhook(DiscordWebHookState.OPEN, "remadisson");
+                files.sendDiscordServerStatus(DiscordWebHookState.OPEN, "remadisson");
             }
 
         } else {
@@ -108,7 +144,7 @@ public class GeneralSchedulerManager {
         }
 
         if (temp_minutes == 0) {
-            files.sendDiscordWebhook(DiscordWebHookState.CLOSED, "remadisson");
+            files.sendDiscordServerStatus(DiscordWebHookState.CLOSED, "remadisson");
             Bukkit.broadcastMessage(prefix + "§eDer Server ist nun §cgeschlossen!");
             Bukkit.broadcastMessage((prefix + "§7Es ist nun kein Streamer mehr online, so werden alle Spieler ohne direkte berichtigung gekickt!"));
 

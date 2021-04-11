@@ -23,11 +23,11 @@ public class WorldManager {
 
     private World world = null;
 
-    public WorldManager(String worldname, WorldType worldType, World.Environment environment, boolean createWarp){
+    public WorldManager(String worldname, WorldType worldType, World.Environment environment, boolean available){
         this.worldname = worldname;
         this.environment = environment;
         this.worldType = worldType;
-        this.createWarp = createWarp;
+        this.createWarp = available;
 
         File dir = new File(directory);
         List<String> folder = Arrays.stream(Objects.requireNonNull(dir.listFiles())).map(File::getName).collect(Collectors.toList());
@@ -71,7 +71,7 @@ public class WorldManager {
         return Bukkit.getWorld(filename) == null;
     }
 
-    public boolean delete(){
+    public boolean delete(World.Environment worldType){
         if(unload()){
             files.warpManager.removeWarp(filename.split("_")[0]);
             files.warpManager.save();
@@ -81,6 +81,20 @@ public class WorldManager {
                     File inside = new File(world_file, one);
                     if(inside.isDirectory()){
                         for(String two : Arrays.stream(Objects.requireNonNull(inside.listFiles())).map(File::getName).collect(Collectors.toList())){
+                            File inside2 = new File(inside, two);
+
+                            if(worldType == World.Environment.NETHER) {
+                                if (inside.isDirectory()) {
+                                    for (String three : Arrays.stream(Objects.requireNonNull(inside2.listFiles())).map(File::getName).collect(Collectors.toList())) {
+                                        try {
+                                            Files.deleteIfExists(new File(inside2, three).toPath());
+                                        } catch (IOException e) {
+                                            e.printStackTrace();
+                                        }
+                                    }
+                                }
+                            }
+
                             try {
                                 Files.deleteIfExists(new File(inside, two).toPath());
                             } catch (IOException e) {

@@ -19,7 +19,7 @@ public final class main extends JavaPlugin {
     private final String console = files.console;
 
     private static main plugin;
-    
+
     /**
      * Init start sequence
      */
@@ -51,7 +51,7 @@ public final class main extends JavaPlugin {
             TablistManager.getInstance().updateTeam(online, files.getPrefix(uuid), files.getColor(uuid), "", files.getLevel(uuid));
         }
 
-        files.streamerManager.syncWhitelist();
+        Bukkit.setWhitelist(false);
     }
 
 
@@ -64,11 +64,13 @@ public final class main extends JavaPlugin {
 
         for(ArenaManager arenaManager : files.arenaManager.values()){
             for (Player player : arenaManager.getFightersList()) {
-                arenaManager.removePlayer(player);
+                arenaManager.removePlayer(player, true);
+                arenaManager.getNeedToTeleport().add(player.getUniqueId());
             }
 
             for(Player player : arenaManager.getViewer()){
-                arenaManager.removeViewer(player);
+                arenaManager.removeViewer(player, true);
+                arenaManager.getNeedToTeleport().add(player.getUniqueId());
             }
         }
 
@@ -104,7 +106,20 @@ public final class main extends JavaPlugin {
 
         getCommand("arena").setExecutor(new ArenaCommand());
 
-        getCommand("vanish").setExecutor(new VanishCommand());
+        getCommand("staff").setExecutor(new StaffCommand());
+
+        getCommand("kick").unregister(null);
+        getCommand("kick").setExecutor(new KickCommand());
+
+        getCommand("ban").unregister(null);
+        getCommand("ban").setExecutor(new BanCommand());
+
+        getCommand("banlist").unregister(null);
+        getCommand("banlist").setExecutor(new BanListCommand());
+
+        getCommand("unban").setExecutor(new UnbanCommand());
+
+        Bukkit.setMaxPlayers(40);
 
     }
 

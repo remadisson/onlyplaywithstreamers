@@ -22,6 +22,10 @@ public class ArenaPlayerDieEvent extends Event {
         this.arenaManager = arenaManager;
     }
 
+    public ArenaPlayerDieEvent() {
+
+    }
+
     @NotNull
     public Player getVictim() {
         return victim;

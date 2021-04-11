@@ -1,6 +1,7 @@
 package de.remadisson.opws.arena;
 
 import de.remadisson.opws.enums.TeamEnum;
+import de.remadisson.opws.events.ArenaScoreboardUpdateEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;

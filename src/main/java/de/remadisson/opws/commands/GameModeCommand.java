@@ -69,6 +69,11 @@ public class GameModeCommand implements CommandExecutor, TabExecutor {
 
             Player target = Bukkit.getPlayer(secondArgument);
 
+            if(!sender.isOp()){
+                sender.sendMessage(prefix + "§cYou have no permission to execute this command!");
+                return false;
+            }
+
             if(target == null){
                 sender.sendMessage(prefix + "§cThe Player §4" + secondArgument + " §cis not online!");
                 return false;

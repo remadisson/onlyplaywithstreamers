@@ -2,6 +2,7 @@ package de.remadisson.opws.commands;
 
 import de.remadisson.opws.enums.ArenaState;
 import de.remadisson.opws.enums.TeamEnum;
+import de.remadisson.opws.events.ArenaScoreboardUpdateEvent;
 import de.remadisson.opws.files;
 import de.remadisson.opws.arena.*;
 import org.bukkit.Bukkit;
@@ -53,12 +54,12 @@ public class ArenaCommand implements TabExecutor {
                     ArenaPlayer arenaPlayer = ArenaManager.getArenaPlayer(uuid);
                     assert arena != null;
                     if(arenaPlayer.getTeam() == TeamEnum.SPECTATOR){
-                        arena.removeViewer(player);
+                        arena.removeViewer(player, false);
                         return true;
                     }
 
-                    arena.removePlayer(player);
-                    player.sendMessage(prefix + "§eDu hast die Arena §6" + arena.getName() + " §everlassen!");
+                    arena.removePlayer(player, false);
+                    player.sendMessage(prefix + "§7Du hast die Arena §a" + arena.getName() + " §7verlassen!");
 
                     return false;
                 }
@@ -84,7 +85,7 @@ public class ArenaCommand implements TabExecutor {
                     }
 
                     if(!arena.getArenaState().equals(ArenaState.LOBBY)){
-                        player.sendMessage(prefix + "§eDie Arena ist bereits im FIGHT!");
+                        player.sendMessage(prefix + "§7Die Arena ist bereits im FIGHT!");
                         return false;
                     }
 
@@ -94,14 +95,20 @@ public class ArenaCommand implements TabExecutor {
                     }
 
                     arenaPlayer.setReady(true);
-                    player.sendMessage(prefix + "§eDu hast dieses Match angenommen!");
-                    arena.sendFightersMessage(arenaPlayer.getTeam().getColor() + player.getName() + "§e hat die Arena mit §a/arena accept §eangenommen!");
+                    player.sendMessage(prefix + "§aDu hast dieses Match angenommen!");
+                    arena.sendFightersMessage(arenaPlayer.getTeam().getColor() + player.getName() + "§7 hat die Arena mit §a/arena accept §7angenommen!");
+                    Bukkit.getPluginManager().callEvent(new ArenaScoreboardUpdateEvent(arena));
                     return true;
                 }
 
                 case "view":{
                     if(ArenaManager.containsPlayer(uuid)){
                         sender.sendMessage(prefix + "§cDu bist bereits in einer Arena!");
+                        return true;
+                    }
+
+                    if(!files.allowArenaFight && !player.isOp() && !ArenaManager.infiniteAllowedPlay.contains(player.getUniqueId())){
+                        player.sendMessage(prefix + "§cArenen sind momentan deaktiviert!");
                         return true;
                     }
 
@@ -154,7 +161,7 @@ public class ArenaCommand implements TabExecutor {
                         return false;
                     }
 
-                    Inventory inv = Bukkit.createInventory(null, 9*3, "§eNimm deinen Preis!");
+                    Inventory inv = Bukkit.createInventory(null, 9*3, "§aNimm deinen Preis!");
                     inv.setItem(13, stack);
                     ((Player) sender).openInventory(inv);
                     return true;

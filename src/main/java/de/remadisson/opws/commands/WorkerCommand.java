@@ -105,7 +105,7 @@ public class WorkerCommand implements CommandExecutor, TabCompleter {
                     }
 
                     if(!worker.contains(uuid)){
-                        sender.sendMessage(prefix + "§bWorker§7-§bList §calready contains §4" + secondArgument);
+                        sender.sendMessage(prefix + "§bWorker§7-§bList §cdoes not contains §4" + secondArgument);
                         return false;
                     }
 
@@ -160,7 +160,7 @@ public class WorkerCommand implements CommandExecutor, TabCompleter {
 
         for (int i = 0; i < (Math.min(worker.size() - (5 * site), 5)); i++) {
             Player player = Bukkit.getPlayer(worker.get((site * 5) + i));
-            sender.sendMessage(prefix + "§f - " + (player != null ? "§a" + player.getName() : "§c" + MojangAPI.getPlayerProfile(worker.get((site * 5) + i)).getName()) + " §7- §fWhitelist: §b" + Bukkit.getWhitelistedPlayers().contains(Bukkit.getOfflinePlayer(MojangAPI.getPlayerProfile(worker.get((site * 5) + i)).getUUID())));
+            sender.sendMessage(prefix + "§f - " + (player != null ? "§a" + player.getName() : "§c" + MojangAPI.getPlayerProfile(worker.get((site * 5) + i)).getName()) + " §7- §fWhitelist: §b" + files.whitelist.contains(MojangAPI.getPlayerProfile(worker.get((site * 5) + i)).getUUID()));
         }
 
         if (site != maxsites) {

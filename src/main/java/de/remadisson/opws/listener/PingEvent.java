@@ -3,8 +3,12 @@ package de.remadisson.opws.listener;
 import com.destroystokyo.paper.event.server.PaperServerListPingEvent;
 import de.remadisson.opws.enums.ServerState;
 import de.remadisson.opws.files;
+import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+
+import java.util.Collections;
+import java.util.stream.Collectors;
 
 public class PingEvent implements Listener {
 
@@ -37,8 +41,15 @@ public class PingEvent implements Listener {
             e.setVersion("§4ERROR");
             e.setProtocolVersion(1);
         } else if(state == ServerState.OPEN){
-            e.setMotd("§a§lGeöffnet §f- §eSpiele mit!");
+            int streamersize = 0;
+            try{
+                streamersize = Collections.frequency(files.streamerManager.getStreamer().stream().map(item -> Bukkit.getPlayer(item).isOnline()).collect(Collectors.toList()), true);
+            }catch(NullPointerException ex){
+                streamersize = 0;
+            }
+            e.setMotd("§aDer Server ist §lgeöffnet! §7- §5" + streamersize + " §5Streamer online!");
             e.setVersion("§aONLINE");
+            e.setProtocolVersion(1);
         }
 
 

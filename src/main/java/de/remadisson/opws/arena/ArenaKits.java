@@ -62,12 +62,15 @@ public class ArenaKits {
 
         ItemStack stew = new ItemStack(Material.SUSPICIOUS_STEW, 1);
         SuspiciousStewMeta stewMeta = (SuspiciousStewMeta) stew.getItemMeta();
-        stewMeta.addCustomEffect(new PotionEffect(PotionEffectType.REGENERATION, 10 * 20, 1, false, false), false);
+        stewMeta.addCustomEffect(new PotionEffect(PotionEffectType.REGENERATION, 5 * 20, 2, false, false), false);
         stew.setItemMeta(stewMeta);
         inventory.addItem(stew);
         inventory.addItem(stew);
         inventory.addItem(stew);
 
+        for (PotionEffect activePotionEffect : p.getActivePotionEffects()) {
+            p.removePotionEffect(activePotionEffect.getType());
+        }
     }
 
 }

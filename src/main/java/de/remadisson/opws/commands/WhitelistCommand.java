@@ -8,6 +8,7 @@ import org.bukkit.command.*;
 import org.bukkit.entity.Player;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class WhitelistCommand implements TabExecutor {
 
@@ -38,12 +39,12 @@ public class WhitelistCommand implements TabExecutor {
                 case "true":
                 case "1":
 
-                    if (Bukkit.hasWhitelist()) {
+                    if (files.whitelistToggle) {
                         sender.sendMessage(prefix + "§cWhitelist is already §a§lon§c.");
                         return true;
                     }
 
-                    Bukkit.setWhitelist(true);
+                    files.whitelistToggle = true;
                     sender.sendMessage(prefix + "§eWhitelist is now §a§lon§e!");
 
                     return true;
@@ -52,19 +53,18 @@ public class WhitelistCommand implements TabExecutor {
                 case "false":
                 case "0":
 
-                    if (!Bukkit.hasWhitelist()) {
+                    if (!files.whitelistToggle) {
                         sender.sendMessage(prefix + "§cWhitelist is already §loff§c.");
                         return true;
                     }
 
-                    Bukkit.setWhitelist(false);
+                    files.whitelistToggle = false;
                     sender.sendMessage(prefix + "§eWhitelist is now §c§loff§e!");
 
                     return true;
 
                 case "reload":
-
-                    Bukkit.reloadWhitelist();
+                    files.whitelist = new ArrayList<>(files.whitelistAPI.getStringList("whitelistedPlayer").stream().map(UUID::fromString).collect(Collectors.toList()));
                     sender.sendMessage(prefix + "§eWhitelist reloaded!");
                     return true;
 
@@ -75,14 +75,13 @@ public class WhitelistCommand implements TabExecutor {
 
                         sender.sendMessage(prefix + "§eCurrently whitelisted Players:");
 
-                        for (OfflinePlayer player : Bukkit.getWhitelistedPlayers()) {
-                            if (Objects.equals(player.getName(), null)) {
-                                sender.sendMessage(prefix + "§7Request is taking a little longer..");
-                                whitelistedNames.add(Objects.requireNonNull(MojangAPI.getPlayerProfile(player.getUniqueId())).getName());
-                            } else {
-                                whitelistedNames.add(player.getName());
-                            }
+                        if(files.whitelist.isEmpty()){
+                            sender.sendMessage(prefix + "§cThere are currently no entries!");
+                            return;
+                        }
 
+                        for (UUID player : files.whitelist) {
+                            whitelistedNames.add(Objects.requireNonNull(MojangAPI.getPlayerProfile(player)).getName());
                         }
 
                         String whitelistedPlayers = String.join("§f, §a", whitelistedNames);
@@ -125,13 +124,12 @@ public class WhitelistCommand implements TabExecutor {
 
                     OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
 
-                    if (offlinePlayer.isWhitelisted()) {
-                        sender.sendMessage(prefix + "§cThe Player §4§l" + secondRaw + "§cis already whitelisted!");
+                    if (files.whitelist.contains(offlinePlayer.getUniqueId())) {
+                        sender.sendMessage(prefix + "§cThe Player §4§l" + secondRaw + " §cis already whitelisted!");
                         return false;
                     }
 
-                    Bukkit.getWhitelistedPlayers().add(offlinePlayer);
-                    offlinePlayer.setWhitelisted(true);
+                    files.whitelist.add(offlinePlayer.getUniqueId());
                     sender.sendMessage(prefix + "§eThe Player §6§l" + secondRaw + "§e is now whitelisted!");
 
                     return true;
@@ -154,13 +152,12 @@ public class WhitelistCommand implements TabExecutor {
 
                     OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
 
-                    if (!offlinePlayer.isWhitelisted()) {
+                    if (!files.whitelist.contains(offlinePlayer.getUniqueId())) {
                         sender.sendMessage(prefix + "§cThe Player §4§l" + secondRaw + "§cis not whitelisted!");
                         return false;
                     }
 
-                    Bukkit.getWhitelistedPlayers().remove(offlinePlayer);
-                    offlinePlayer.setWhitelisted(false);
+                    files.whitelist.remove(offlinePlayer.getUniqueId());
                     sender.sendMessage(prefix + "§eThe Player §6§l" + secondRaw + "§e not whitelisted anymore!");
 
                     return true;
@@ -177,7 +174,7 @@ public class WhitelistCommand implements TabExecutor {
     }
 
     public void sendHelp(CommandSender sender, int site) {
-        sender.sendMessage(files.prefix + "§eHelp for §6/whitelist §f- §dStatus: " + (Bukkit.hasWhitelist() ? ("§atrue") : ("§cfalse")));
+        sender.sendMessage(files.prefix + "§eHelp for §6/whitelist §f- §dStatus: " + (files.whitelistToggle ? ("§atrue") : ("§cfalse")));
         sender.sendMessage(files.prefix + "§f - §e/whitelist on/off");
         sender.sendMessage(files.prefix + "§f - §e/whitelist add/remove <Name>");
         sender.sendMessage(files.prefix + "§f - §e/whitelist reload");
@@ -199,13 +196,9 @@ public class WhitelistCommand implements TabExecutor {
             }
 
             if (args.length == 2 && (args[0].toLowerCase().equals("add") || args[0].toLowerCase().equals("remove"))) {
-                for (OfflinePlayer whitelisted : Bukkit.getWhitelistedPlayers()) {
+                for (UUID whitelisted : files.whitelist) {
                     String name = null;
-                    if (Objects.equals(whitelisted.getName(), null)) {
-                        name = MojangAPI.getPlayerProfile(whitelisted.getUniqueId()).getName();
-                    } else {
-                        name = whitelisted.getName();
-                    }
+                        name = MojangAPI.getPlayerProfile(whitelisted).getName();
 
                     if (name.startsWith(args[1].toLowerCase())) {
                         flist.add(name);

@@ -2,7 +2,9 @@ package de.remadisson.opws.listener;
 
 import de.remadisson.opws.arena.ArenaManager;
 import de.remadisson.opws.files;
+import de.remadisson.opws.main;
 import de.remadisson.opws.manager.WorldManager;
+import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.WorldType;
 
@@ -20,7 +22,7 @@ public class WorldListener {
     private static int interval = 24;
 
     public static boolean WorldCycle(){
-        WorldManager wm =  new WorldManager("farmwelt", WorldType.NORMAL, World.Environment.NORMAL, true);
+        WorldManager wm = new WorldManager("farmwelt", WorldType.NORMAL, World.Environment.NORMAL, true);
         files.worldManager.put(wm.getWorldName(), wm);
 
         Calendar cal_old = Calendar.getInstance();
@@ -35,7 +37,9 @@ public class WorldListener {
 
         if(temp_farmwelt == null || distance.toDays() == (temp_farmwelt.toDays() + 1) || ((distance.toHours() % interval) == 0)) {
             if(!farmWeltStatus) {
+                Bukkit.getScheduler().scheduleSyncDelayedTask(main.getInstance(), () -> {
                 System.out.println(files.debug + "§dFarmwelt Exists since: " + sdf.format(cal_old.getTime()) + " §7- §eAlready existing Days §b" + distance.toDays() + "§8/§e7 §8(§b" + distance.toHours() + " Hours§8)");
+                }, 20*4);
                 farmWeltStatus = true;
             }
         } else {
@@ -45,8 +49,10 @@ public class WorldListener {
         temp_farmwelt = distance;
 
         if(distance.toDays() > 6) {
+
             System.out.println(files.debug + "Resetting " + wm.get().getName());
-            wm.delete();
+            files.sendDiscordWorldReset(wm.get());
+            wm.delete(World.Environment.NORMAL);
             WorldCycle();
 
             return true;
@@ -54,6 +60,8 @@ public class WorldListener {
 
         WorldManager test = new WorldManager("testworld", WorldType.FLAT, World.Environment.NORMAL, false);
         files.worldManager.put(test.getWorldName(), test);
+        WorldManager heaven = new WorldManager ("heaven", WorldType.FLAT, World.Environment.NORMAL, false);
+        files.worldManager.put(heaven.getWorldName(), heaven);
 
         return false;
     }
@@ -74,7 +82,7 @@ public class WorldListener {
 
         if(temp_nether == null || distance.toDays() == (temp_nether.toDays() + 1) || ((distance.toHours() % interval) == 0)) {
             if(!netherStatus) {
-                System.out.println(files.debug + "§dNether Exists since: " + sdf.format(cal_old.getTime()) + " §7- §eAlready existing Days §b" + distance.toDays() + "§8/§e30 §8(§b" + distance.toHours() + " Hours§8)");
+                    System.out.println(files.debug + "§dNether Exists since: " + sdf.format(cal_old.getTime()) + " §7- §eAlready existing Days §b" + distance.toDays() + "§8/§e30 §8(§b" + distance.toHours() + " Hours§8)");
                 netherStatus = true;
             }
         } else {
@@ -85,7 +93,8 @@ public class WorldListener {
 
         if(distance.toDays() > 29) {
             System.out.println(files.debug + "Resetting " + wm.get().getName());
-            wm.delete();
+            files.sendDiscordWorldReset(wm.get());
+            wm.delete(World.Environment.NETHER);
             NetherCycle();
 
             return true;
@@ -105,6 +114,7 @@ public class WorldListener {
                 && newcal.get(Calendar.MONTH) == old.get(Calendar.MONTH)
                 && newcal.get(Calendar.DAY_OF_MONTH) != old.get(Calendar.DAY_OF_MONTH)){
             ArenaManager.alreadyArenaPlayedPlayer.clear();
+            ArenaManager.lastResetMillis = System.currentTimeMillis();
             System.out.println(files.debug + "§bArenaPlayer have been resettet!");
         }
     }
